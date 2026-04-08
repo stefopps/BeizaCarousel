@@ -6,6 +6,7 @@
 <title>Beiza · Carousel Studio</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
 
 @font-face{font-family:'Simply Rounded';font-weight:400;font-style:normal;src:url('fonts/SimplyRounded.ttf')format('truetype');}
@@ -100,7 +101,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
 .s-title{font-family:'Alliance',sans-serif;font-weight:900;line-height:1.06;margin-bottom:9px;}
 .s-title .hw{color:#C8905A;}
 .s-para{font-family:'Alliance',sans-serif;font-weight:300;line-height:1.62;max-width:260px;box-sizing:border-box;}
-.s-cta{border-radius:4px;font-family:'Alliance',sans-serif;font-weight:600;}
+.s-cta{border-radius:4px;font-family:'Alliance',sans-serif;font-weight:600;line-height:1;box-sizing:border-box;}
 /* Outro: stretch to slide width so inner % widths resolve (avoid shrink-to-fit → 0 width + one-char wraps). */
 .s-inner>.s-outro-stack{align-self:stretch;width:100%;max-width:100%;box-sizing:border-box;}
 .s-outro-stack{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:28px 20px 52px;box-sizing:border-box;min-height:100%;position:relative;z-index:6;}
@@ -119,7 +120,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
 .soc-r svg{width:11px;height:11px;}
 .slide3-media audio,.slide-media-strip audio{max-width:100%;}
 .slide3-cap.smed-rich{white-space:pre-wrap;}
-.slide3-cap .smed-em{color:inherit;line-height:1.25;display:inline;}
+.slide3-cap .smed-em{line-height:1.25;display:inline;}
 .slide-media-strip.smed-col{flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;}
 .rp-media-dock .slide-media-ui{margin-top:4px;width:100%;max-width:100%;box-sizing:border-box;}
 .smed-col .slide-media-ui{margin-top:0;width:100%;max-width:100%;box-sizing:border-box;}
@@ -145,6 +146,10 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
 .rp-body{flex:1;padding:9px 11px;}
 .rp-body::-webkit-scrollbar{width:2px;}
 .sec{margin-bottom:12px;}
+.sec.sec-coll > .sec-hd{cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px;user-select:none;}
+.sec.sec-coll > .sec-hd::after{content:'▾';opacity:.55;font-size:10px;flex-shrink:0;}
+.sec.sec-coll.collapsed > :not(.sec-hd){display:none !important;}
+.sec.sec-coll.collapsed > .sec-hd::after{content:'▸';}
 .sec-hd{font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:5px;padding-bottom:3px;border-bottom:1px solid var(--border);}
 .type-tabs{display:flex;gap:2px;margin-bottom:7px;}
 .ttab{flex:1;padding:4px 2px;text-align:center;font-size:8px;font-weight:700;border-radius:3px;border:1px solid var(--border2);cursor:pointer;background:transparent;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;transition:all .12s;}
@@ -259,7 +264,7 @@ input[type=range]{width:100%;margin:2px 0;accent-color:var(--sand);}
       </div>
     </div>
     <div class="rp-body" id="edContent"></div>
-    <div class="rp-foot"><div class="note" style="margin:0 0 8px;font-size:8px;line-height:1.35">Export: still images only (not video). Full-res render at DPI × format. Linked images are fetched first (use http:// on localhost, not raw file://). Session JSON embeds audio as base64. Save also downloads <code style="font-size:8px">Name.transcription</code>. Drop files on dashed zones.</div><button class="full-btn" onclick="exportAll()">⬇ Export All Slides</button><button class="full-btn" style="margin-top:6px;background:var(--dark);color:var(--sand);border:1px solid var(--sand2)" onclick="exportCurrentSlide()">⬇ Export selected slide only</button></div>
+    <div class="rp-foot"><div class="note" style="margin:0 0 8px;font-size:8px;line-height:1.35">Export: full-res stills. <strong>FFmpeg pack</strong> = ZIP with cover, audio, <strong>captions.ass</strong> + <strong>MAKE-VIDEO.bat</strong> (or run <code style="font-size:8px">batch-json-to-mp4.cjs</code> headlessly — same ASS emphasis as the app). The browser cannot encode video by itself. Session JSON embeds audio. Save also downloads <code style="font-size:8px">Name.transcription</code>. Use http:// not file:// for assets.</div><button class="full-btn" onclick="exportAll()">⬇ Export All Slides</button><button class="full-btn" style="margin-top:6px;background:var(--dark);color:var(--sand);border:1px solid var(--sand2)" onclick="exportCurrentSlide()">⬇ Export selected slide only</button></div>
   </div>
 </div>
 <input type="file" id="mascotIn" accept="image/*" style="display:none" onchange="loadMascot(event)">
@@ -283,7 +288,7 @@ let fmt='sq',scrollDir='v',cur=0,mascotUrl=SVG_MASCOT_MAIN,sessions={},roDraft=[
 let globals={
   adinkra:{src:AD_SYMBOL,enabled:true,x:50,yTop:6,yBottom:82,w:62,scale:106,opacityTop:1,opacityBottom:0.3,showOnSlide4:true,blend:'multiply'},
   swipe:{x:5,y:4,sizeH:9,opacity:1},
-  exportDpi:150,exportFormat:'jpeg'
+  exportDpi:150,exportFormat:'jpeg',titleFontScale:100,bodyFontScale:100
 };
 const TC={
   sand:{bg:'#C8905A',text:'#fff',sub:'rgba(255,255,255,.72)',cBg:'#1A1714',cC:'#C8905A',ctaBg:'#1A1714',ctaC:'#fff',ftT:'#fff',ftS:'rgba(255,255,255,.5)',ic:'#fff'},
@@ -366,14 +371,20 @@ function applyCaptionBoostWords(raw,boostCsv){
   });
   return s;
 }
-/** Wrap **double asterisks** in captions for larger emphatic words (size = caption × emphasis %). */
-function formatCaptionRich(raw,emScalePct,boostCsv){
+/** Same accent as outro tagline pill (sand / terracotta / custom). */
+function captionAccentColor(s){
+  const c=TC[s.theme]||TC.cream;
+  return outroTagPillBgResolve(s,c);
+}
+/** Wrap **double asterisks** in captions for larger emphatic words (size = caption × emphasis %). Optional accentHex matches tagline pill color. */
+function formatCaptionRich(raw,emScalePct,boostCsv,accentHex){
   let t=applyCaptionBoostWords(String(raw||''),boostCsv);
   const em=Math.max(1,(emScalePct!=null?emScalePct:130)/100);
   const esc=function(x){return String(x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');};
+  const col=(accentHex&&/^#[0-9A-Fa-f]{6}$/.test(String(accentHex)))?';color:'+accentHex:'';
   return t.split(/(\*\*[^*]+\*\*)/g).map(function(part){
     const mm=part.match(/^\*\*([^*]+)\*\*$/);
-    if(mm)return '<span class="smed-em" style="font-size:'+em+'em;font-weight:800">'+esc(mm[1])+'</span>';
+    if(mm)return '<span class="smed-em" style="font-size:'+em+'em;font-weight:800'+col+'">'+esc(mm[1])+'</span>';
     return esc(part).replace(/\n/g,'<br>');
   }).join('');
 }
@@ -452,11 +463,11 @@ function slideMediaAudTime(idx){
     if(aud&&fillD&&isFinite(aud.duration)){const p=aud.duration?aud.currentTime/aud.duration:0;fillD.style.width=(Math.min(1,p)*100).toFixed(2)+'%';}
   }
   if(!srt||!String(srt).trim()){cap.innerHTML='';return;}
-  const emP=m.captionEmPct!=null?m.captionEmPct:130,boost=m.captionBoostCsv;
+  const emP=m.captionEmPct!=null?m.captionEmPct:130,boost=m.captionBoostCsv,acc=captionAccentColor(s);
   if(!m.audio||!aud){
     cap.classList.add('smed-rich');
     var first=cues.length?cues[0].text.replace(/<[^>]+>/g,''):'';
-    cap.innerHTML=formatCaptionRich(first,emP,boost);
+    cap.innerHTML=formatCaptionRich(first,emP,boost,acc);
     cap.setAttribute('data-smed-hint','preview');
     return;
   }
@@ -464,7 +475,7 @@ function slideMediaAudTime(idx){
   const cue=cues.find(c=>ms>=c.start&&ms<c.end);
   cap.classList.add('smed-rich');
   cap.removeAttribute('data-smed-hint');
-  cap.innerHTML=cue?formatCaptionRich(cue.text.replace(/<[^>]+>/g,''),emP,boost):'';
+  cap.innerHTML=cue?formatCaptionRich(cue.text.replace(/<[^>]+>/g,''),emP,boost,acc):'';
 }
 function renderSlideMediaStrip(s,w,h,idx,mo){
   mo=mo||{};
@@ -488,9 +499,9 @@ function renderSlideMediaStrip(s,w,h,idx,mo){
     <span id="smed-time-${idTag}" aria-hidden="true" style="position:absolute;left:-9999px;font-size:0">0:00 / 0:00</span>
     <div aria-hidden="true" style="position:absolute;left:-9999px;width:10px;height:4px;overflow:hidden"><div class="smed-fill" id="smed-fill-${idTag}"></div></div>`;
   }
-  const boost=m.captionBoostCsv;
+  const boost=m.captionBoostCsv,acc=captionAccentColor(s);
   let initial='';
-  if(hasSrt&&!hasAud&&cues.length)initial=formatCaptionRich(cues[0].text.replace(/<[^>]+>/g,''),emP,boost);
+  if(hasSrt&&!hasAud&&cues.length)initial=formatCaptionRich(cues[0].text.replace(/<[^>]+>/g,''),emP,boost,acc);
   return `<div class="slide-media-strip slide3-media smed-col" style="position:absolute;${posStyle};z-index:8;pointer-events:auto;margin:0 auto;display:flex">
     <div id="smed-cap-${idTag}" class="slide3-cap smed-rich" data-smed-slide="${slideIdx}" style="min-height:${Math.max(24,Math.round(capMin*0.45))}px;font-family:'Alliance',sans-serif;font-weight:600;font-size:${fs}px;color:${col};text-align:center;line-height:1.35;word-wrap:break-word;max-height:${capMin}px;overflow:auto;width:100%">${initial}</div>
     ${audHtml}
@@ -663,7 +674,8 @@ function renderSlide(s,idx,opt){
   const fScale=w/pw;
   const sp=n=>Math.round(n*fScale);
   const sel=!exportMode&&idx===cur;
-  const tf=Math.round((pw>=340?26:pw>=272?21:16)*fScale), pf=Math.round((pw>=340?12:10)*fScale);
+  const ts=(globals.titleFontScale!=null?globals.titleFontScale:100)/100,bs=(globals.bodyFontScale!=null?globals.bodyFontScale:100)/100;
+  const tf=Math.round((pw>=340?26:pw>=272?21:16)*fScale*ts), pf=Math.round((pw>=340?12:10)*fScale*bs);
   const cIdx=slides.filter(x=>x.type==='content').indexOf(s)+1;
   const mo=exportMode?{mediaIdTag:'exp'+idx,slideIndex:idx}:undefined;
   if(s.type==='pan')return renderPan(s,idx,sel,w,h,opt);
@@ -906,7 +918,9 @@ function renderEditor(){
       <div class="fl">Emphasis words (% of caption): <span id="cce">${s.cntCaptionEmPct!=null?s.cntCaptionEmPct:130}</span></div>
       <input type="range" min="108" max="165" step="1" value="${s.cntCaptionEmPct!=null?s.cntCaptionEmPct:130}" oninput="live('cntCaptionEmPct',parseInt(this.value),'cce','%')">
       <div class="fl">Auto-emphasize words (comma-separated)</div>
-      <input class="fi" value="${esc(s.cntCaptionBoostWords||'')}" oninput="debUpd('cntCaptionBoostWords',this.value)" placeholder="e.g. Duafe, Akan">`:''}
+      <input class="fi" value="${esc(s.cntCaptionBoostWords||'')}" oninput="debUpd('cntCaptionBoostWords',this.value)" placeholder="e.g. Duafe, Akan">
+      <button type="button" class="full-btn" style="margin-top:10px;background:var(--dark);color:var(--sand);border:1px solid var(--sand2)" onclick="downloadFfmpegMediaPack()">⬇ Download video pack (ZIP + MAKE-VIDEO.bat)</button>
+      <div class="note" style="margin-top:6px">Unzip, install FFmpeg on Windows, double-click <strong>MAKE-VIDEO.bat</strong> → MP4. Pack includes <strong>captions.ass</strong> (same **emphasis** / accent as the editor). The page cannot encode video alone.</div>`:''}
 `:'' )+(s.slide3symbol?`<div class="type-tabs s3-editor-tabs" style="margin-top:10px">
       <div class="ttab on" onclick="switchS3EditorTab('layout',this)">Layout</div>
       <div class="ttab" onclick="switchS3EditorTab('audio',this)">Audio</div>
@@ -938,7 +952,9 @@ function renderEditor(){
       <div class="fl">Emphasis words (% of caption): <span id="s3em">${s.slide3CaptionEmPct!=null?s.slide3CaptionEmPct:130}</span></div>
       <input type="range" min="108" max="165" step="1" value="${s.slide3CaptionEmPct!=null?s.slide3CaptionEmPct:130}" oninput="live('slide3CaptionEmPct',parseInt(this.value),'s3em','%')">
       <div class="fl">Auto-emphasize words (comma-separated)</div>
-      <input class="fi" value="${esc(s.slide3CaptionBoostWords||'')}" oninput="debUpd('slide3CaptionBoostWords',this.value)" placeholder="e.g. Akan, Akans, Nsoromma">`:''}
+      <input class="fi" value="${esc(s.slide3CaptionBoostWords||'')}" oninput="debUpd('slide3CaptionBoostWords',this.value)" placeholder="e.g. Akan, Akans, Nsoromma">
+      <button type="button" class="full-btn" style="margin-top:10px;background:var(--dark);color:var(--sand);border:1px solid var(--sand2)" onclick="downloadFfmpegMediaPack()">⬇ Download video pack (ZIP + MAKE-VIDEO.bat)</button>
+      <div class="note" style="margin-top:6px">ZIP: cover, audio, <strong>captions.ass</strong> + .srt, <strong>MAKE-VIDEO.bat</strong>, README. FFmpeg burns styled subs from the .ass file — not generated inside the browser.</div>`:''}
     </div>`:'' )+(s.slide5symbol?`<div class="sec-hd" style="margin-top:10px">Explainer text layout</div>
       <div class="fl">Box top (%): <span id="s5tp">${s.slide5BoxTopPct!=null?s.slide5BoxTopPct:10}</span></div>
       <input type="range" min="2" max="35" step="0.5" value="${s.slide5BoxTopPct!=null?s.slide5BoxTopPct:10}" oninput="live('slide5BoxTopPct',parseFloat(this.value),'s5tp','%')">
@@ -977,8 +993,15 @@ function renderEditor(){
       <div class="type-tabs">${['intro','content','outro'].map(t=>`<div class="ttab${s.type===t?' on':''}" onclick="chType('${t}')">${t}</div>`).join('')}<div class="ttab" onclick="addPan()">+Pan</div></div>
     </div>
     <div class="sec"><div class="sec-hd">Theme</div><div class="swatches">${sw}</div></div>
+    <div class="sec"><div class="sec-hd">Typography (defaults)</div>
+      <div class="note" style="margin:0 0 8px">Scales the primary <strong>title</strong> and <strong>body</strong> text on intro, content, and outro. Other sliders (counter %, caption %, outro tag URL px, pan hero…) still apply.</div>
+      <div class="fl">Title scale: <span id="gTitSc">${globals.titleFontScale!=null?globals.titleFontScale:100}</span>%</div>
+      <input type="range" min="70" max="140" step="1" value="${globals.titleFontScale!=null?globals.titleFontScale:100}" oninput="liveGlobalScale('titleFontScale',parseInt(this.value),'gTitSc')">
+      <div class="fl">Body scale: <span id="gBodySc">${globals.bodyFontScale!=null?globals.bodyFontScale:100}</span>%</div>
+      <input type="range" min="70" max="140" step="1" value="${globals.bodyFontScale!=null?globals.bodyFontScale:100}" oninput="liveGlobalScale('bodyFontScale',parseInt(this.value),'gBodySc')">
+    </div>
     ${s.slide4photo!==undefined?`
-    <div class="sec"><div class="sec-hd">Culture Photo</div>
+    <div class="sec sec-coll collapsed"><div class="sec-hd" onclick="secHeadToggle(this)">Culture Photo</div>
       <div class="upload-z" data-drop="slide4" onclick="trigSlide4Photo(${cur})">${s.slide4photo?'✓ Loaded · click to change':'↑ Upload culture photo · or drop'}</div>
       ${s.slide4photo?`<img class="img-prev" src="${s.slide4photo}">
       <div class="fl">Y: <span id="s4y">${s.slide4y??25}</span></div><input type="range" min="5" max="70" step="0.1" value="${s.slide4y??25}" oninput="live('slide4y',parseFloat(this.value),'s4y','%')" ondblclick="resetSlideKey('slide4y',25,'s4y','%')">
@@ -992,7 +1015,7 @@ function renderEditor(){
       <button class="rp-act d" style="margin-top:4px" onclick="upd('slide4photo',null)">Remove</button>`:''}
     </div>
     `:''}
-    <div class="sec"><div class="sec-hd">Background Image</div>
+    <div class="sec sec-coll collapsed"><div class="sec-hd" onclick="secHeadToggle(this)">Background Image</div>
       <div class="upload-z" data-drop="bg" onclick="trigUp(${cur})">${s.bgImage?'✓ Loaded · click to change':'↑ Upload image · or drop'}</div>
       ${s.bgImage?`<img class="img-prev" src="${s.bgImage}">
         <div class="fl">Dim: <span id="ldim">${dim}</span></div><input type="range" min="0" max="90" value="${dim}" oninput="live('bgDim',parseInt(this.value),'ldim','%')" ondblclick="resetSlideKey('bgDim',0,'ldim','%')">
@@ -1002,7 +1025,7 @@ function renderEditor(){
         <input type="range" min="50" max="300" value="${s.bgZoom||100}" oninput="live('bgZoom',parseInt(this.value),'lbz','%')" ondblclick="resetSlideKey('bgZoom',100,'lbz','%')">
         <div style="margin-top:4px"><button class="rp-act d" onclick="upd('bgImage',null)">Remove</button></div>`:''}
     </div>
-    <div class="sec"><div class="sec-hd">Adinkra Symbol Layer</div>
+    <div class="sec sec-coll collapsed"><div class="sec-hd" onclick="secHeadToggle(this)">Adinkra Symbol Layer</div>
       <div class="upload-z" data-drop="sym" onclick="trigSym(${cur})">${s.symbolImage?'✓ Symbol loaded · change':'↑ Upload symbol image · or drop'}</div>
       ${s.symbolImage?`<img class="img-prev" src="${s.symbolImage}" style="background:#eee">
         <div class="fl">Blend mode</div>
@@ -1017,7 +1040,7 @@ function renderEditor(){
         <input type="range" min="0" max="100" value="${s.symbolY||30}" oninput="live('symbolY',parseInt(this.value),'lsy','%')" ondblclick="resetSlideKey('symbolY',30,'lsy','%')">
         <button class="rp-act d" style="margin-top:4px" onclick="upd('symbolImage',null)">Remove</button>`:''}
     </div>
-    <div class="sec"><div class="sec-hd">Global Adinkra (all slides)</div>
+    <div class="sec sec-coll collapsed"><div class="sec-hd" onclick="secHeadToggle(this)">Global Adinkra (all slides)</div>
       <div class="upload-z" data-drop="adinkra" onclick="document.getElementById('adinkraUpGlobal').click()">${globals.adinkra?.src?'✓ Loaded · change global Adinkra':'↑ Upload global Adinkra · or drop'}</div>
       ${togG('adinkra','enabled','Enable Adinkra globally')}
       <div class="fl">Blend mode</div>
@@ -1039,7 +1062,7 @@ function renderEditor(){
       ${togG('adinkra','showOnSlide4','Show on photo slide')}
     </div>
     ${(s.slide3symbol||s.slide4photo!==undefined||s.slide5symbol)?`
-    <div class="sec"><div class="sec-hd">Adinkra on this slide</div>
+    <div class="sec sec-coll collapsed"><div class="sec-hd" onclick="secHeadToggle(this)">Adinkra on this slide</div>
       ${togSL('adinkraWhite','Pure white symbol',!!s.adinkraWhite)}
       ${togSL('adinkraUseGlobal','Use global Adinkra',s.adinkraUseGlobal!==false)}
       ${s.adinkraUseGlobal===false?`
@@ -1052,7 +1075,7 @@ function renderEditor(){
       <div class="fl">Y top / bottom: <span id="slady">${s.slide5symbol?((s.adinkraLocal&&s.adinkraLocal.yBottom!=null)?s.adinkraLocal.yBottom:82):((s.adinkraLocal&&s.adinkraLocal.yTop!=null)?s.adinkraLocal.yTop:6)}</span></div>
       <input type="range" min="0" max="100" step="0.1" value="${s.slide5symbol?((s.adinkraLocal&&s.adinkraLocal.yBottom!=null)?s.adinkraLocal.yBottom:82):((s.adinkraLocal&&s.adinkraLocal.yTop!=null)?s.adinkraLocal.yTop:6)}" oninput="liveSL('${s.slide5symbol?'yBottom':'yTop'}',parseFloat(this.value),'slady','%')">`:''}
     </div>`:''}
-    <div class="sec"><div class="sec-hd">Global Swipe Icon</div>
+    <div class="sec sec-coll collapsed"><div class="sec-hd" onclick="secHeadToggle(this)">Global Swipe Icon</div>
       <div class="fl">X: <span id="gswx">${globals.swipe?.x??5}</span></div>
       <input type="range" min="0" max="100" step="0.1" value="${globals.swipe?.x??5}" oninput="liveG('swipe','x',parseFloat(this.value),'gswx','%')" ondblclick="resetSwipeKey('x')">
       <div class="fl">Y: <span id="gswy">${globals.swipe?.y??4}</span></div>
@@ -1062,7 +1085,7 @@ function renderEditor(){
       <div class="fl">Opacity: <span id="gswo">${globals.swipe?.opacity??1}</span></div>
       <input type="range" min="0" max="1" step="0.05" value="${globals.swipe?.opacity??1}" oninput="liveG('swipe','opacity',parseFloat(this.value),'gswo','')" ondblclick="resetSwipeKey('opacity')">
     </div>
-    <div class="sec"><div class="sec-hd">Mascot / Logo</div>
+    <div class="sec sec-coll collapsed"><div class="sec-hd" onclick="secHeadToggle(this)">Mascot / Logo</div>
       <div style="display:flex;gap:4px;margin-bottom:6px">
         <button class="rp-act" onclick="setMascotVersion('white')" title="White version for dark backgrounds" style="flex:1">White</button>
         <button class="rp-act" onclick="setMascotVersion('2color')" title="2-color version for CTA/light backgrounds" style="flex:1">2-Color</button>
@@ -1165,6 +1188,12 @@ function updPg(id,k,v){panGroups[id][k]=v;renderStrip();renderEditor();}
 function livePg(id,k,v,lid,sfx){panGroups[id][k]=v;const el=document.getElementById(lid);if(el)el.textContent=v+sfx;renderStripThrottled();}
 function setPanHeroFont(id,v){panGroups[id].panHeroFont=v;renderStripThrottled();}
 function liveG(group,key,val,lid,sfx){if(!globals[group])globals[group]={};globals[group][key]=val;const el=document.getElementById(lid);if(el)el.textContent=val+sfx;renderStripThrottled();}
+function liveGlobalScale(key,val,lid){
+  globals[key]=val;
+  const el=document.getElementById(lid);if(el)el.textContent=String(val)+'%';
+  renderAll();
+}
+function secHeadToggle(hd){hd.parentElement.classList.toggle('collapsed');}
 const ADINKRA_RESET={x:50,yTop:6,yBottom:82,w:62,scale:106,opacityTop:1,opacityBottom:0.3};
 const SWIPE_RESET={x:5,y:4,sizeH:9,opacity:1};
 function resetAdinkraKey(key){
@@ -1260,7 +1289,7 @@ function delPan(id){const pg=panGroups[id];if(!pg)return;[...pg.slideIds].sort((
 function liveSL(key,val,lid,sfx){const sl=slides[cur];if(!sl.adinkraLocal)sl.adinkraLocal={};sl.adinkraLocal[key]=val;const el=document.getElementById(lid);if(el)el.textContent=val+(sfx||'');renderStripThrottled();}
 function toggleSL(k){const sl=slides[cur];if(k==='adinkraUseGlobal'){sl.adinkraUseGlobal=sl.adinkraUseGlobal===false;if(sl.adinkraUseGlobal===false&&!sl.adinkraLocal)sl.adinkraLocal={scale:100,w:62,x:50,yTop:6,yBottom:82,opacityTop:1,opacityBottom:0.3};}else if(k==='adinkraWhite')sl.adinkraWhite=!sl.adinkraWhite;renderAll();}
 function togSL(k,lbl,v){return`<div class="tog-row"><span class="tog-lbl">${lbl}</span><div class="tog${v?' on':''}" onclick="toggleSL('${k}')"></div></div>`;}
-function getState(){return{deckSchemaVersion:15,slides,panGroups,pgCtr,mascotUrl,fmt,scrollDir,globals};}
+function getState(){return{deckSchemaVersion:16,slides,panGroups,pgCtr,mascotUrl,fmt,scrollDir,globals};}
 function setState(d){
   slides=d.slides||slides;
   slides=slides.map(s=>{
@@ -1292,6 +1321,8 @@ function setState(d){
   if(globals.adinkra.yTop==null)globals.adinkra.yTop=6;
   if(!globals.swipe)globals.swipe={x:5,y:4,sizeH:9,opacity:1};
   if(globals.exportDpi==null||globals.exportDpi===undefined)globals.exportDpi=150;
+  if(globals.titleFontScale==null||globals.titleFontScale===undefined)globals.titleFontScale=100;
+  if(globals.bodyFontScale==null||globals.bodyFontScale===undefined)globals.bodyFontScale=100;
   if(mascotUrl){const img=document.getElementById('blImg');if(img)img.src=mascotUrl;}
   else{const img=document.getElementById('blImg');if(img)img.src=SVG_MASCOT_MAIN;}
   cur=0;
@@ -1504,10 +1535,10 @@ function exportPrepMediaClone(doc,cloned){
     const m=getSlideMedia(si);
     if(!m||!m.srt)return;
     const cues=m.srtCues&&m.srtCues.length?m.srtCues:parseSrtToCues(m.srt);
-    const emP=m.captionEmPct!=null?m.captionEmPct:130,boost=m.captionBoostCsv;
+    const emP=m.captionEmPct!=null?m.captionEmPct:130,boost=m.captionBoostCsv,acc=captionAccentColor(si);
     const first=cues.length?cues[0].text.replace(/<[^>]+>/g,''):'';
     cap.classList.add('smed-rich');
-    cap.innerHTML=formatCaptionRich(first,emP,boost);
+    cap.innerHTML=formatCaptionRich(first,emP,boost,acc);
   });
 }
 function exportWaitImages(root){
@@ -1723,10 +1754,9 @@ function getExportPixelSize(){
   const m=dpi/72;
   return{EW:Math.round(EW0*m),EH:Math.round(EH0*m)};
 }
-async function exportSlideToFile(i){
+async function exportSlideToCanvas(i){
   const {EW,EH}=getExportPixelSize();
   const s=slides[i];
-  const sn=document.getElementById('sName').value.replace(/\s/g,'-')||'slide';
   let bgColor='#ffffff';
   if(s.type==='pan'||s.bgImage)bgColor='#000000';
   else bgColor=(TC[s.theme]||TC.cream).bg;
@@ -1765,13 +1795,221 @@ async function exportSlideToFile(i){
     }finally{
       window.scrollTo(sx,sy);
     }
-    const a=document.createElement('a');
-    const usePng=globals.exportFormat==='png';
-    a.download=`beiza-${sn}-${String(i+1).padStart(2,'0')}.${usePng?'png':'jpg'}`;
-    a.href=usePng?cv.toDataURL('image/png'):cv.toDataURL('image/jpeg',0.98);
-    a.click();
+    return cv;
   }finally{
     if(host&&host.parentNode)host.parentNode.removeChild(host);
+  }
+}
+function canvasToJpegBlob(cv,q){
+  return new Promise((res,rej)=>{cv.toBlob(b=>{if(b)res(b);else rej(new Error('JPEG blob failed'));},'image/jpeg',q!=null?q:0.98);});
+}
+async function exportSlideToFile(i){
+  const sn=document.getElementById('sName').value.replace(/\s/g,'-')||'slide';
+  const cv=await exportSlideToCanvas(i);
+  const usePng=globals.exportFormat==='png';
+  const a=document.createElement('a');
+  a.download=`beiza-${sn}-${String(i+1).padStart(2,'0')}.${usePng?'png':'jpg'}`;
+  a.href=usePng?cv.toDataURL('image/png'):cv.toDataURL('image/jpeg',0.98);
+  a.click();
+}
+function dataUrlToBlob(dataUrl){
+  const m=dataUrl.match(/^data:([^;]+);base64,(.+)$/);
+  if(!m)return null;
+  const bin=atob(m[2]);
+  const arr=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);
+  return new Blob([arr],{type:m[1]});
+}
+function audioExtFromDataUrl(dataUrl){
+  const m=dataUrl.match(/^data:audio\/([^;]+)/i);
+  if(!m)return'bin';
+  const t=m[1].toLowerCase().split(';')[0];
+  if(t==='mpeg'||t==='mp3')return'mp3';
+  if(t==='mp4'||t==='aac'||t==='x-m4a')return'm4a';
+  if(t==='wav'||t==='x-wav')return'wav';
+  if(t==='ogg')return'ogg';
+  return'm4a';
+}
+/** #RRGGBB → ASS PrimaryColour &HAABBGGRR (opaque). */
+function hexToAssColour(hex){
+  const m=String(hex||'').trim().match(/^#?([0-9A-Fa-f]{6})$/);
+  if(!m)return'&H00FFFFFF';
+  const r=parseInt(m[1].slice(0,2),16),g=parseInt(m[1].slice(2,4),16),b=parseInt(m[1].slice(4,6),16);
+  return '&H00'+[b,g,r].map(function(x){return x.toString(16).padStart(2,'0');}).join('').toUpperCase();
+}
+function msToAssTime(ms){
+  if(!isFinite(ms)||ms<0)ms=0;
+  const cs=Math.floor(ms/10)%100;
+  let t=Math.floor(ms/1000);
+  const s=t%60;
+  t=Math.floor(t/60);
+  const m=t%60;
+  const h=Math.floor(t/60);
+  return h+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')+'.'+String(cs).padStart(2,'0');
+}
+function escapeAssText(s){
+  return String(s||'').replace(/\\/g,'\\\\').replace(/\{/g,'\\{').replace(/\}/g,'\\}');
+}
+/** Gold #C8905A for **words** (ASS BGR &H005A90C8 in &HAABBGGRR form). */
+const ASS_GOLD_EMPH=hexToAssColour('#C8905A');
+/** Base caption size for FFmpeg pack ASS (matches requested export style). */
+const ASS_BASE_FS=18;
+/**
+ * **bold** after applyCaptionBoostWords — emphasis: fs = base × emScalePct/100, gold, then {\r}.
+ * Same ratio as formatCaptionRich (em = emScalePct/100).
+ */
+function captionCueToAssLine(raw,baseFs,emScalePct,boostCsv){
+  const em=Math.max(1,(emScalePct!=null?emScalePct:130)/100);
+  const emFs=Math.round(baseFs*em);
+  const lines=String(raw||'').replace(/<[^>]+>/g,'').split(/\n/);
+  return lines.map(function(line){
+    let t=applyCaptionBoostWords(line,boostCsv);
+    const parts=t.split(/(\*\*[^*]+\*\*)/g);
+    let out='';
+    parts.forEach(function(p){
+      const mm=p.match(/^\*\*([^*]+)\*\*$/);
+      if(mm) out+='{\\fs'+emFs+'}{\\c'+ASS_GOLD_EMPH+'}'+escapeAssText(mm[1])+'{\\r}';
+      else out+=escapeAssText(p);
+    });
+    return out;
+  }).join('\\N');
+}
+/**
+ * ASS for libass: Alliance (fallback Arial), white, fs 18, bottom centre, opaque box (BorderStyle 3,
+ * Outline 3 black, semi-transparent black BackColour). **tokens** → larger fs + gold, {\r} reset.
+ */
+function buildAssForFfmpegPack(s,m){
+  const cues=m.srtCues&&m.srtCues.length?m.srtCues:parseSrtToCues(m.srt);
+  const sz=getExportPixelSize();
+  const EW=sz.EW,EH=sz.EH;
+  const marginV=Math.max(24,Math.round(EH*((m.bottom!=null?m.bottom:6)/100)));
+  const emPct=m.captionEmPct!=null?m.captionEmPct:130;
+  const boost=m.captionBoostCsv;
+  const di=cues.map(function(c){
+    const txt=captionCueToAssLine(c.text,ASS_BASE_FS,emPct,boost);
+    return 'Dialogue: 0,'+msToAssTime(c.start)+','+msToAssTime(c.end)+',Default,,0,0,0,,'+txt;
+  }).join('\r\n');
+  const sty='Style: Default,Alliance,'+ASS_BASE_FS+',&H00FFFFFF,&H000000FF,&H00000000,&H80000000,-1,0,0,0,100,100,0,0,3,3,0,2,48,48,'+marginV+',1';
+  return ['[Script Info]','Title: Beiza captions','ScriptType: v4.00+','PlayResX: '+EW,'PlayResY: '+EH,'WrapStyle: 0','ScaledBorderAndShadow: yes','','[V4+ Styles]','Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding',sty,'','[Events]','Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text',di].join('\r\n');
+}
+function buildFfmpegReadme(name,slideLabel,audioExt,outClean,outSubs){
+  return`Beiza Carousel — FFmpeg pack (${name} · ${slideLabel})
+================================================
+
+IMPORTANT — No MP4 inside the browser
+---------------------------------------
+This page cannot run FFmpeg or encode video. It only downloads these files.
+Run MAKE-VIDEO.bat (Windows) after installing FFmpeg — it builds two MP4s.
+
+ZIP contents:
+  cover.jpg       — Full-res still (same as Export slide).
+  audio.${audioExt} — Decoded from your session.
+  captions.srt    — Plain SRT (optional: soft subs / editing).
+  captions.ass    — Styled subs: white + box, **emphasis** → larger gold text (Alliance; libass).
+  MAKE-VIDEO.bat  — Builds clean + with-subs MP4s (needs FFmpeg on PATH).
+  README-ffmpeg.txt — This file.
+
+MAKE-VIDEO.bat produces:
+  1) ${outClean}  — cover + audio only (no burned subtitles).
+  2) ${outSubs}   — same + burned-in captions from captions.ass (**emphasis** + gold).
+
+Quick path (Windows):
+  1) Install FFmpeg: https://www.gyan.dev/ffmpeg/builds/ (or https://ffmpeg.org/)
+  2) Add ffmpeg.exe to your system PATH.
+  3) Unzip, double-click MAKE-VIDEO.bat
+
+Manual — clean video (no subs):
+ffmpeg -y -loop 1 -i cover.jpg -i audio.${audioExt} -c:v libx264 -tune stillimage -pix_fmt yuv420p -c:a aac -b:a 192k -shortest "${outClean}"
+
+Manual — burned-in ASS (**emphasis** + gold #C8905A, same ratio as formatCaptionRich):
+ffmpeg -y -loop 1 -i cover.jpg -i audio.${audioExt} -vf "ass=captions.ass" -c:v libx264 -pix_fmt yuv420p -c:a aac -b:a 192k -shortest "${outSubs}"
+
+Optional — soft subs from plain SRT (asterisks visible as text):
+ffmpeg -y -loop 1 -i cover.jpg -i audio.${audioExt} -i captions.srt -c:v libx264 -pix_fmt yuv420p -c:a aac -c:s mov_text -shortest "${name}-${slideLabel}-softsubs.mp4"
+
+Optional — audio file with embedded cover (not a video):
+ffmpeg -y -i audio.${audioExt} -i cover.jpg -map 0:a -map 1 -c:v mjpeg -disposition:v:0 attached_pic -c:a copy "${name}-${slideLabel}-with-art.m4a"
+
+Notes:
+- captions.ass uses Alliance (install locally or edit Style to Arial). **Words** use fs = 18×(caption emphasis%/100) and gold; boost words from the editor are pre-wrapped like applyCaptionBoostWords.
+`;
+}
+function buildMakeVideoBat(audioExt,outClean,outSubs){
+  return('@echo off\r\n'+`cd /d "%~dp0"
+where ffmpeg >nul 2>nul
+if errorlevel 1 (
+  echo.
+  echo  FFmpeg was not found. Install it and add ffmpeg.exe to your PATH.
+  echo  https://www.gyan.dev/ffmpeg/builds/
+  echo.
+  pause
+  exit /b 1
+)
+echo Building clean video ^(no subs^): ${outClean}
+ffmpeg -y -loop 1 -i cover.jpg -i audio.${audioExt} -c:v libx264 -tune stillimage -pix_fmt yuv420p -c:a aac -b:a 192k -shortest "${outClean}"
+if errorlevel 1 (
+  echo FFmpeg failed ^(clean^).
+  pause
+  exit /b 1
+)
+echo.
+echo Building with burned-in ASS: ${outSubs}
+ffmpeg -y -loop 1 -i cover.jpg -i audio.${audioExt} -vf "ass=captions.ass" -c:v libx264 -pix_fmt yuv420p -c:a aac -b:a 192k -shortest "${outSubs}"
+if errorlevel 1 (
+  echo.
+  echo  FFmpeg failed ^(ASS^). If subtitles fail, try a folder path without special characters.
+  echo.
+  pause
+  exit /b 1
+)
+echo.
+echo  Done: ${outClean} and ${outSubs}
+echo.
+start .
+pause
+`);
+}
+async function downloadFfmpegMediaPack(){
+  if(typeof JSZip==='undefined'){alert('JSZip failed to load. Check network / CDN.');return;}
+  const m=getSlideMedia(slides[cur]);
+  if(!m||!m.audio){alert('This slide has no audio. Load audio in the Audio tab or counter strip first.');return;}
+  const srt=String(m.srt||'').trim();
+  if(!srt){alert('No captions (.srt). Paste or load captions for this slide first.');return;}
+  const ov=document.getElementById('expOv'),msg=document.getElementById('expMsg'),bar=document.getElementById('expBar');
+  ov.classList.add('show');msg.textContent='Building FFmpeg pack…';bar.style.width='20%';
+  try{
+    if(document.fonts&&document.fonts.ready)try{await document.fonts.ready;}catch(_){}
+    bar.style.width='45%';
+    const cv=await exportSlideToCanvas(cur);
+    bar.style.width='70%';
+    const coverBlob=await canvasToJpegBlob(cv,0.98);
+    const audioBlob=dataUrlToBlob(m.audio);
+    if(!audioBlob){alert('Could not decode audio data URL.');return;}
+    const ext=audioExtFromDataUrl(m.audio);
+    const nm=document.getElementById('sName').value.replace(/\s/g,'-')||'slide';
+    const lab=`slide-${String(cur+1).padStart(2,'0')}`;
+    const outClean=`${nm}-${lab}-video.mp4`;
+    const outSubs=`${nm}-${lab}-withsubs.mp4`;
+    const zip=new JSZip();
+    zip.file('cover.jpg',coverBlob);
+    zip.file('audio.'+ext,audioBlob);
+    zip.file('captions.srt',srt);
+    zip.file('captions.ass',buildAssForFfmpegPack(slides[cur],m));
+    zip.file('README-ffmpeg.txt',buildFfmpegReadme(nm,lab,ext,outClean,outSubs));
+    zip.file('MAKE-VIDEO.bat',buildMakeVideoBat(ext,outClean,outSubs));
+    bar.style.width='90%';
+    const out=await zip.generateAsync({type:'blob'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(out);
+    a.download=`beiza-ffmpeg-${nm}-${lab}.zip`;
+    a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+    bar.style.width='100%';
+  }catch(err){
+    console.error(err);
+    alert('Pack failed: '+(err&&err.message?err.message:String(err)));
+  }finally{
+    setTimeout(()=>{ov.classList.remove('show');bar.style.width='0%';},400);
   }
 }
 async function exportAll(){
@@ -1905,6 +2143,7 @@ async function exportCurrentSlide(){
     if(z&&(!e.relatedTarget||!z.contains(e.relatedTarget)))z.classList.remove('dz-over');
   });
 })();
+
 renderAll();renderSlots();
 </script>
 </body>

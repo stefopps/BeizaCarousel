@@ -1,0 +1,34 @@
+{
+  "panGroups": {
+    "1": {
+      "panText": "Endure",
+      "panSubText": "Akan Symbols"
+    }
+  },
+  "slides": [
+    null,
+    null,
+    {
+      "title": "What does this mean?",
+      "hw": "mean"
+    },
+    {
+      "title": "Can you spot it in real life?"
+    },
+    {
+      "para": "Aya is the fern. It stands for endurance, defiance, and the quiet kind of resilience that keeps growing under pressure. In Akan thought, it speaks to the person who bends, survives, and keeps standing when the world expected them to break."
+    },
+    {
+      "title": "Aya"
+    }
+  ],
+  "_voiceover": {
+    "reel1": "I am Aya. I grow where softer things give up. Can you see why I endure?",
+    "reel2": "In Akan symbolism, I am the fern, a plant that survives in hard places and still returns green.",
+    "reel3": "I mean endurance, resilience, and the strength to keep becoming, even under pressure."
+  },
+  "_meta": {
+    "symbolName": "Aya",
+    "carouselNum": "04"
+  }
+}
