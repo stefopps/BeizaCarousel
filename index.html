@@ -99,13 +99,15 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
 .s-tagline{font-family:'Alliance',sans-serif;font-weight:400;margin-bottom:6px;opacity:.85;}
 .s-title{font-family:'Alliance',sans-serif;font-weight:900;line-height:1.06;margin-bottom:9px;}
 .s-title .hw{color:#C8905A;}
-.s-para{font-family:'Alliance',sans-serif;font-weight:300;line-height:1.62;max-width:min(260px,100%);min-width:0;overflow-wrap:anywhere;word-break:break-word;box-sizing:border-box;}
+.s-para{font-family:'Alliance',sans-serif;font-weight:300;line-height:1.62;max-width:260px;box-sizing:border-box;}
 .s-cta{border-radius:4px;font-family:'Alliance',sans-serif;font-weight:600;}
-.s-outro-stack{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:28px 20px 52px;box-sizing:border-box;min-height:100%;width:100%;max-width:100%;min-width:0;position:relative;z-index:6;}
+/* Outro: stretch to slide width so inner % widths resolve (avoid shrink-to-fit → 0 width + one-char wraps). */
+.s-inner>.s-outro-stack{align-self:stretch;width:100%;max-width:100%;box-sizing:border-box;}
+.s-outro-stack{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:28px 16px 52px;box-sizing:border-box;min-height:100%;position:relative;z-index:6;}
 .s-outro-stack .s-tagline{max-width:100%;box-sizing:border-box;overflow-wrap:break-word;}
-.s-inner>.s-outro-stack{align-self:stretch;}
-.s-outro-stack>div:first-of-type:not(.s-cta){width:100%;max-width:100%;min-width:0;box-sizing:border-box;}
-.s-outro-mascot{display:block;flex-shrink:0;height:auto;width:var(--omw,100px);max-width:min(100%,var(--omw,100px));margin:0 auto var(--ogap,14px);}
+.s-outro-stack .s-outro-mascot+div{display:flex;flex-direction:column;align-items:center;width:100%;max-width:100%;box-sizing:border-box;padding:0 4px;}
+.s-outro-stack .s-para{max-width:min(260px,calc(100% - 8px));margin-left:auto;margin-right:auto;word-break:break-all;}
+.s-outro-mascot{display:block;flex-shrink:0;height:auto;width:var(--omw,100px);max-width:100%;margin:0 auto var(--ogap,14px);}
 .s-cnt{border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'Alliance',sans-serif;font-weight:700;margin-bottom:11px;flex-shrink:0;}
 .s-foot{position:absolute;bottom:0;left:0;right:0;padding:7px 10px;display:flex;align-items:center;justify-content:space-between;}
 .au-wrap{display:flex;align-items:center;gap:6px;}
@@ -118,7 +120,8 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
 .slide3-media audio,.slide-media-strip audio{max-width:100%;}
 .slide3-cap.smed-rich{white-space:pre-wrap;}
 .slide3-cap .smed-em{color:inherit;line-height:1.25;display:inline;}
-.slide-media-strip.smed-col{flex-direction:column;justify-content:flex-end;align-items:center;gap:7px;}
+.slide-media-strip.smed-col{flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;}
+.rp-media-dock .slide-media-ui{margin-top:4px;width:100%;max-width:100%;box-sizing:border-box;}
 .smed-col .slide-media-ui{margin-top:0;width:100%;max-width:100%;box-sizing:border-box;}
 .slide-media-ui{display:flex;align-items:center;gap:6px;margin-top:4px;padding:5px 7px;border-radius:5px;font-family:'Alliance',sans-serif;pointer-events:auto;}
 .smed-light{background:rgba(0,0,0,.06);color:#1A1714;}
@@ -233,6 +236,7 @@ input[type=range]{width:100%;margin:2px 0;accent-color:var(--sand);}
       <button class="chip" id="fmtJpg" onclick="setExportFormat('jpeg',this)">JPEG</button>
       <button class="chip" id="fmtPng" onclick="setExportFormat('png',this)">PNG</button>
       <button class="exp-chip" onclick="exportAll()">⬇ Export All</button>
+      <button class="exp-chip" onclick="exportCurrentSlide()">⬇ This slide</button>
     </div>
     <div class="sess-bar">
       <span class="tlbl">Session</span>
@@ -255,7 +259,7 @@ input[type=range]{width:100%;margin:2px 0;accent-color:var(--sand);}
       </div>
     </div>
     <div class="rp-body" id="edContent"></div>
-    <div class="rp-foot"><div class="note" style="margin:0 0 8px;font-size:8px;line-height:1.35">Export: still images only (not video). Uses a print-style pipeline: clone of the strip preview + copied computed styles, then scaled to export width (DPI chip × format). Higher DPI = more pixels. Linked images are fetched and inlined first (open via a local server, e.g. Live Server — not raw file://). Session JSON embeds audio as base64. Save also downloads <code style="font-size:8px">Name.transcription</code>. Drop files on dashed zones.</div><button class="full-btn" onclick="exportAll()">⬇ Export All Slides</button></div>
+    <div class="rp-foot"><div class="note" style="margin:0 0 8px;font-size:8px;line-height:1.35">Export: still images only (not video). Full-res render at DPI × format. Linked images are fetched first (use http:// on localhost, not raw file://). Session JSON embeds audio as base64. Save also downloads <code style="font-size:8px">Name.transcription</code>. Drop files on dashed zones.</div><button class="full-btn" onclick="exportAll()">⬇ Export All Slides</button><button class="full-btn" style="margin-top:6px;background:var(--dark);color:var(--sand);border:1px solid var(--sand2)" onclick="exportCurrentSlide()">⬇ Export selected slide only</button></div>
   </div>
 </div>
 <input type="file" id="mascotIn" accept="image/*" style="display:none" onchange="loadMascot(event)">
@@ -402,13 +406,17 @@ function smedFmt(sec){
 }
 function smedMeta(idx){
   const a=document.getElementById('smed-aud-'+idx),el=document.getElementById('smed-time-'+idx);
-  if(!a||!el)return;
+  const elDock=document.getElementById('smed-dock-time');
+  if(!a)return;
   const d=isFinite(a.duration)?a.duration:0;
-  el.textContent=smedFmt(0)+' / '+smedFmt(d);
+  const lab=smedFmt(0)+' / '+smedFmt(d);
+  if(el)el.textContent=lab;
+  if(elDock&&idx===cur)elDock.textContent=lab;
   slideMediaAudTime(idx);
 }
 function smedToggle(idx){
-  const a=document.getElementById('smed-aud-'+idx),btn=document.querySelector('#smed-ui-'+idx+' .smed-btn');
+  const a=document.getElementById('smed-aud-'+idx);
+  const btn=document.querySelector('#smed-ui-'+idx+' .smed-btn')||document.getElementById('smed-dock-btn');
   if(!a)return;
   if(a.paused){a.play().catch(()=>{});if(btn)btn.textContent='❚❚';}
   else{a.pause();if(btn)btn.textContent='▶';}
@@ -421,7 +429,7 @@ function smedSeek(ev,idx){
   slideMediaAudTime(idx);
 }
 function smedEnd(idx){
-  const btn=document.querySelector('#smed-ui-'+idx+' .smed-btn');
+  const btn=document.querySelector('#smed-ui-'+idx+' .smed-btn')||document.getElementById('smed-dock-btn');
   if(btn)btn.textContent='▶';
 }
 function slideMediaAudTime(idx){
@@ -437,6 +445,11 @@ function slideMediaAudTime(idx){
   if(aud&&tim&&isFinite(aud.duration)){
     tim.textContent=smedFmt(aud.currentTime)+' / '+smedFmt(aud.duration);
     if(fill){const p=aud.duration?aud.currentTime/aud.duration:0;fill.style.width=(Math.min(1,p)*100).toFixed(2)+'%';}
+  }
+  if(idx===cur){
+    const timD=document.getElementById('smed-dock-time'),fillD=document.getElementById('smed-dock-fill');
+    if(aud&&timD&&isFinite(aud.duration))timD.textContent=smedFmt(aud.currentTime)+' / '+smedFmt(aud.duration);
+    if(aud&&fillD&&isFinite(aud.duration)){const p=aud.duration?aud.currentTime/aud.duration:0;fillD.style.width=(Math.min(1,p)*100).toFixed(2)+'%';}
   }
   if(!srt||!String(srt).trim()){cap.innerHTML='';return;}
   const emP=m.captionEmPct!=null?m.captionEmPct:130,boost=m.captionBoostCsv;
@@ -466,18 +479,14 @@ function renderSlideMediaStrip(s,w,h,idx,mo){
   const sc=(m.captionScale!=null?m.captionScale:100)/100;
   const fs=Math.max(9,Math.round(h*0.028*sc)),capMin=Math.min(80,Math.round(h*0.22*sc));
   const col=m.captionLight?'#111':'rgba(255,255,255,.95)';
-  const tone=m.captionLight?'smed-light':'smed-dark';
   const emP=m.captionEmPct!=null?m.captionEmPct:130;
   const align=m.captionAlignLikeTitle;
   const posStyle=align?`left:50%;transform:translateX(-50%);width:${Math.round(w*0.9)}px;max-width:90%;bottom:${bot}%`:`left:3%;right:3%;bottom:${bot}%`;
   let audHtml='';
   if(hasAud){
     audHtml=`<audio id="smed-aud-${idTag}" preload="metadata" playsinline src="${m.audio}" style="position:absolute;width:0;height:0;opacity:0;pointer-events:none" onloadedmetadata="smedMeta(${slideIdx})" ontimeupdate="slideMediaAudTime(${slideIdx})" onended="smedEnd(${slideIdx})"></audio>
-    <div class="slide-media-ui ${tone}" id="smed-ui-${idTag}">
-      <button type="button" class="smed-btn" onclick="event.stopPropagation();smedToggle(${slideIdx})" aria-label="Play">▶</button>
-      <span class="smed-time" id="smed-time-${idTag}">0:00 / 0:00</span>
-      <div class="smed-track" onclick="event.stopPropagation();smedSeek(event,${slideIdx})"><div class="smed-fill" id="smed-fill-${idTag}"></div></div>
-    </div>`;
+    <span id="smed-time-${idTag}" aria-hidden="true" style="position:absolute;left:-9999px;font-size:0">0:00 / 0:00</span>
+    <div aria-hidden="true" style="position:absolute;left:-9999px;width:10px;height:4px;overflow:hidden"><div class="smed-fill" id="smed-fill-${idTag}"></div></div>`;
   }
   const boost=m.captionBoostCsv;
   let initial='';
@@ -771,8 +780,9 @@ function smedAutoplayForSlide(idx){
     const a=document.getElementById('smed-aud-'+j);
     if(!a)return;
     const m=getSlideMedia(slides[j]);
-    if(j===idx&&m&&m.audio){a.currentTime=0;a.play().catch(()=>{});const btn=document.querySelector('#smed-ui-'+j+' .smed-btn');if(btn)btn.textContent='❚❚';}
-    else{a.pause();const b=document.querySelector('#smed-ui-'+j+' .smed-btn');if(b)b.textContent='▶';}
+    const dockB=document.getElementById('smed-dock-btn');
+    if(j===idx&&m&&m.audio){a.currentTime=0;a.play().catch(()=>{});const btn=document.querySelector('#smed-ui-'+j+' .smed-btn')||(j===cur?dockB:null);if(btn)btn.textContent='❚❚';}
+    else{a.pause();const b=document.querySelector('#smed-ui-'+j+' .smed-btn')||(j===cur?dockB:null);if(b)b.textContent='▶';}
   });
 }
 function bindStripMediaAutoplay(){
@@ -824,6 +834,27 @@ function roDO(e,i){e.preventDefault();document.querySelectorAll('.ro-item')[i]?.
 function roDL(e,i){document.querySelectorAll('.ro-item')[i]?.classList.remove('drag-over');}
 function roDD(e,i){e.preventDefault();document.querySelectorAll('.ro-item').forEach(t=>t.classList.remove('drag-over'));if(roSrc<0||roSrc===i)return;const m=roDraft.splice(roSrc,1)[0];roDraft.splice(i,0,m);roSrc=-1;renderRoList();}
 function applyRo(){const otn={};roDraft.forEach((s,ni)=>{otn[s._oi]=ni;});slides=roDraft.map(s=>{const ns={...s};delete ns._oi;return ns;});Object.values(panGroups).forEach(pg=>{pg.slideIds=pg.slideIds.map(id=>otn[id]??id);});cur=0;closeRo();renderAll();}
+function mediaDockControlsHtml(){
+  const m=getSlideMedia(slides[cur]);
+  if(!m||!m.audio)return '';
+  const tone=m.captionLight?'smed-light':'smed-dark';
+  return`<div class="rp-media-dock"><div class="fl" style="margin-top:8px">Preview playback</div>
+  <div class="slide-media-ui ${tone}" id="smed-dock-ui" style="max-width:100%;box-sizing:border-box">
+    <button type="button" class="smed-btn" id="smed-dock-btn" onclick="smedToggle(${cur})" aria-label="Play">▶</button>
+    <span class="smed-time" id="smed-dock-time">0:00 / 0:00</span>
+    <div class="smed-track" onclick="smedSeek(event,${cur})"><div class="smed-fill" id="smed-dock-fill"></div></div>
+  </div></div>`;
+}
+function switchS3EditorTab(which,btn){
+  document.querySelectorAll('.s3-editor-tabs .ttab').forEach(t=>t.classList.remove('on'));
+  if(btn)btn.classList.add('on');
+  const lay=document.getElementById('s3editor-layout'),au=document.getElementById('s3editor-audio');
+  if(lay&&au){
+    lay.style.display=which==='layout'?'block':'none';
+    au.style.display=which==='audio'?'block':'none';
+  }
+  if(which==='audio')requestAnimationFrame(()=>{try{const m=getSlideMedia(slides[cur]);if(m&&m.audio){smedMeta(cur);slideMediaAudTime(cur);}}catch(_){}});
+}
 function renderEditor(){
   const s=slides[cur],ed=document.getElementById('edContent'),tt=document.getElementById('rpTitle');
   if(!s){ed.innerHTML='';return;}
@@ -858,6 +889,7 @@ function renderEditor(){
       ${s.cntMediaShow===true?`<div class="note" style="margin:6px 0">Export All is images only; audio and .srt save in session JSON.</div>
       <div class="upload-z" data-drop="slideAudio" onclick="trigSlideMediaAudio()">${s.cntMediaAudio?'✓ Audio loaded':'↑ Load audio · or drop'}</div>
       ${s.cntMediaAudio?`<button type="button" class="rp-act d" style="margin-top:4px" onclick="clearSlideMediaField('audio')">Remove audio</button>`:''}
+      ${s.cntMediaAudio?mediaDockControlsHtml():''}
       <div class="upload-z" style="margin-top:6px" data-drop="slideSrt" onclick="trigSlideMediaSrt()">${s.cntMediaSrt?'✓ Captions (.srt) loaded':'↑ Load .srt · or drop'}</div>
       <div class="fl" style="margin-top:6px">Or paste SRT</div>
       <textarea class="fi" style="min-height:74px;font-size:10px" oninput="debUpd('cntMediaSrt',this.value)" placeholder="1&#10;00:00:00,000 --&gt; 00:00:02,000&#10;Line">${escHtml(s.cntMediaSrt||'')}</textarea>
@@ -870,18 +902,25 @@ function renderEditor(){
       <input type="range" min="108" max="165" step="1" value="${s.cntCaptionEmPct!=null?s.cntCaptionEmPct:130}" oninput="live('cntCaptionEmPct',parseInt(this.value),'cce','%')">
       <div class="fl">Auto-emphasize words (comma-separated)</div>
       <input class="fi" value="${esc(s.cntCaptionBoostWords||'')}" oninput="debUpd('cntCaptionBoostWords',this.value)" placeholder="e.g. Duafe, Akan">`:''}
-`:'')
-+(s.slide3symbol?`<div class="sec-hd" style="margin-top:10px">Question slide layout</div>
+`:'' )+(s.slide3symbol?`<div class="type-tabs s3-editor-tabs" style="margin-top:10px">
+      <div class="ttab on" onclick="switchS3EditorTab('layout',this)">Layout</div>
+      <div class="ttab" onclick="switchS3EditorTab('audio',this)">Audio</div>
+    </div>
+    <div id="s3editor-layout" class="s3editor-panel">
+      <div class="sec-hd" style="margin-top:4px">Question slide layout</div>
       <div class="fl">Symbols row Y (% from top): <span id="s3ad">${s.slide3AdTopPct!=null?s.slide3AdTopPct:6}</span></div>
       <input type="range" min="0" max="28" step="0.5" value="${s.slide3AdTopPct!=null?s.slide3AdTopPct:6}" oninput="live('slide3AdTopPct',parseFloat(this.value),'s3ad','%')">
       <div class="fl">? mark center Y (%): <span id="s3qm">${s.slide3QmarkYpct!=null?s.slide3QmarkYpct:38}</span></div>
       <input type="range" min="18" max="55" step="0.5" value="${s.slide3QmarkYpct!=null?s.slide3QmarkYpct:38}" oninput="live('slide3QmarkYpct',parseFloat(this.value),'s3qm','%')">
       <div class="fl">Title margin from bottom (%): <span id="s3tb">${s.slide3TitleBottomPct!=null?s.slide3TitleBottomPct:8}</span></div>
       <input type="range" min="3" max="22" step="0.5" value="${s.slide3TitleBottomPct!=null?s.slide3TitleBottomPct:8}" oninput="live('slide3TitleBottomPct',parseFloat(this.value),'s3tb','%')">
+    </div>
+    <div id="s3editor-audio" class="s3editor-panel" style="display:none">
       ${togF('slide3ShowMedia','Audio + captions (bottom)',s.slide3ShowMedia===true)}
-      ${s.slide3ShowMedia===true?`<div class="note" style="margin:6px 0">Import .srt (transcribe elsewhere). Export All is images only; audio + text stay in session JSON — long clips make huge files.</div>
+      ${s.slide3ShowMedia===true?`<div class="note" style="margin:6px 0">Import .srt (transcribe elsewhere). Playback controls are here so the slide preview can show captions. Export is still images only; audio + text stay in session JSON.</div>
       <div class="upload-z" data-drop="slideAudio" onclick="trigSlideMediaAudio()">${s.slide3AudioData?'✓ Audio loaded':'↑ Load audio · or drop'}</div>
       ${s.slide3AudioData?`<button type="button" class="rp-act d" style="margin-top:4px" onclick="clearSlideMediaField('audio')">Remove audio</button>`:''}
+      ${mediaDockControlsHtml()}
       <div class="upload-z" style="margin-top:6px" data-drop="slideSrt" onclick="trigSlideMediaSrt()">${s.slide3Srt?'✓ Captions (.srt) loaded':'↑ Load .srt · or drop'}</div>
       <div class="fl" style="margin-top:6px">Or paste SRT</div>
       <textarea class="fi" style="min-height:74px;font-size:10px" oninput="debUpd('slide3Srt',this.value)" placeholder="Use **word** for bigger emphasis&#10;1&#10;00:00:00,000 --&gt; 00:00:02,000&#10;Line">${escHtml(s.slide3Srt||'')}</textarea>
@@ -895,8 +934,7 @@ function renderEditor(){
       <input type="range" min="108" max="165" step="1" value="${s.slide3CaptionEmPct!=null?s.slide3CaptionEmPct:130}" oninput="live('slide3CaptionEmPct',parseInt(this.value),'s3em','%')">
       <div class="fl">Auto-emphasize words (comma-separated)</div>
       <input class="fi" value="${esc(s.slide3CaptionBoostWords||'')}" oninput="debUpd('slide3CaptionBoostWords',this.value)" placeholder="e.g. Akan, Akans, Nsoromma">`:''}
-`:'')
-+(s.slide5symbol?`<div class="sec-hd" style="margin-top:10px">Explainer text layout</div>
+    </div>`:'' )+(s.slide5symbol?`<div class="sec-hd" style="margin-top:10px">Explainer text layout</div>
       <div class="fl">Box top (%): <span id="s5tp">${s.slide5BoxTopPct!=null?s.slide5BoxTopPct:10}</span></div>
       <input type="range" min="2" max="35" step="0.5" value="${s.slide5BoxTopPct!=null?s.slide5BoxTopPct:10}" oninput="live('slide5BoxTopPct',parseFloat(this.value),'s5tp','%')">
       <div class="fl">Text block height (%): <span id="s5bh">${s.slide5BoxHpct!=null?s.slide5BoxHpct:55}</span></div>
@@ -904,7 +942,7 @@ function renderEditor(){
       <div class="fl">Side inset (% each): <span id="s5in">${s.slide5InsetPct!=null?s.slide5InsetPct:17}</span></div>
       <input type="range" min="5" max="35" step="0.5" value="${s.slide5InsetPct!=null?s.slide5InsetPct:17}" oninput="live('slide5InsetPct',parseFloat(this.value),'s5in','%')">
       <div class="fl">Font boost (%): <span id="s5fb">${s.slide5FontBoost!=null?s.slide5FontBoost:100}</span></div>
-      <input type="range" min="70" max="145" step="1" value="${s.slide5FontBoost!=null?s.slide5FontBoost:100}" oninput="live('slide5FontBoost',parseInt(this.value),'s5fb','%')">`:'');
+      <input type="range" min="70" max="145" step="1" value="${s.slide5FontBoost!=null?s.slide5FontBoost:100}" oninput="live('slide5FontBoost',parseInt(this.value),'s5fb','%')">`:'') ;
 
   }else{
     flds=togF('showTagline','Tagline',s.showTagline)+(s.showTagline?`<input class="fi" value="${esc(s.tagline)}" oninput="debUpd('tagline',this.value)">`:'')+(s.showTagline?togF('outroTagPill','Tagline as pill',s.outroTagPill===true):'')+(s.showTagline&&s.outroTagPill?`<div class="fl">Pill CTA (alt.)</div><select class="fi" onchange="upd('outroTagPillAccent',this.value||null)">${[['','Theme default'],['sand','Sand'],['terracotta','Terracotta']].map(([v,l])=>`<option value="${v}"${((v===''&&!s.outroTagPillAccent)||(v&&s.outroTagPillAccent===v))?' selected':''}>${l}</option>`).join('')}</select>`:'')+togF('showTitle','Title',s.showTitle)+(s.showTitle?`<input class="fi" value="${esc(s.title)}" oninput="debUpd('title',this.value)"><div class="fl">Accent word</div><input class="fi" value="${esc(s.hw)}" oninput="debUpd('hw',this.value)">`:'')+togF('showPara','Paragraph',s.showPara)+(s.showPara?`<textarea class="fi" oninput="this.value=limitInputForCurrentSlide('para',this.value);debUpd('para',this.value)">${esc(s.para)}</textarea>`:'')+togF('showCTA','Call to action',s.showCTA)+(s.showCTA?`<input class="fi" value="${esc(s.ctaText)}" oninput="debUpd('ctaText',this.value)">`:'')+togF('showIcons','Social icons',s.showIcons)+
@@ -1037,6 +1075,10 @@ function renderEditor(){
       ${togF('showAuthor','Show author',s.showAuthor)}
       ${s.showAuthor?`<input class="fi" value="${esc(s.authorName)}" oninput="debUpd('authorName',this.value)" placeholder="Name"><input class="fi" style="margin-top:3px" value="${esc(s.authorSub)}" oninput="debUpd('authorSub',this.value)" placeholder="Handle / URL">`:''}
     </div>`;
+  try{
+    const mq=getSlideMedia(slides[cur]);
+    if(mq&&mq.audio)requestAnimationFrame(()=>{try{smedMeta(cur);slideMediaAudTime(cur);}catch(e){}});
+  }catch(_){}
 }
 function togG(g,k,lbl){const v=!!globals?.[g]?.[k];return`<div class="tog-row"><span class="tog-lbl">${lbl}</span><div class="tog${v?' on':''}" onclick="toggleGlobal('${g}','${k}')"></div></div>`;}
 function renderPanEd(s,idx,ed){
@@ -1619,76 +1661,102 @@ async function exportBoostBackgroundImages(cloneRoot,html2canvasScale){
   });
   return Promise.all(jobs);
 }
-async function exportAll(){
-  const ov=document.getElementById('expOv'),msg=document.getElementById('expMsg'),bar=document.getElementById('expBar');
-  ov.classList.add('show');
+function getExportPixelSize(){
   const EX={sq:[1080,1080],port:[864,1080],st:[607,1080]};
   const [EW0,EH0]=EX[fmt]||EX.sq;
   const dpi=globals.exportDpi!=null?globals.exportDpi:150;
   const m=dpi/72;
-  const EW=Math.round(EW0*m),EH=Math.round(EH0*m);
-  const total=slides.length;
+  return{EW:Math.round(EW0*m),EH:Math.round(EH0*m)};
+}
+async function exportSlideToFile(i){
+  const {EW,EH}=getExportPixelSize();
+  const s=slides[i];
   const sn=document.getElementById('sName').value.replace(/\s/g,'-')||'slide';
+  let bgColor='#ffffff';
+  if(s.type==='pan'||s.bgImage)bgColor='#000000';
+  else bgColor=(TC[s.theme]||TC.cream).bg;
+  let host=null;
+  try{
+    const html=renderSlide(s,i,{exportW:EW,exportH:EH});
+    host=document.createElement('div');
+    host.setAttribute('aria-hidden','true');
+    host.style.cssText=`position:fixed;left:0;top:0;z-index:9990;pointer-events:none;width:${EW}px;height:${EH}px;overflow:hidden;background:${bgColor};`;
+    host.innerHTML=html;
+    const root=host.firstElementChild;
+    if(!root)throw new Error('Export render produced no root element');
+    document.body.appendChild(host);
+    await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+    await exportInlineImagesToDataUrl(root);
+    await exportWaitImages(root);
+    await exportPrepSlide4Photos(root,1);
+    await rasterizeSvgDataUrlsInClone(root,1);
+    await exportWaitImages(root);
+    await new Promise(r=>setTimeout(r,80));
+    const sx=window.scrollX,sy=window.scrollY;
+    window.scrollTo(0,0);
+    let cv;
+    try{
+      cv=await html2canvas(root,{
+        scale:1,
+        scrollX:0,
+        scrollY:0,
+        useCORS:true,
+        allowTaint:false,
+        backgroundColor:bgColor,
+        logging:false,
+        foreignObjectRendering:false,
+        onclone(_doc,cloned){exportPrepBlendFallback(cloned);exportPrepMediaClone(_doc,cloned);}
+      });
+    }finally{
+      window.scrollTo(sx,sy);
+    }
+    const a=document.createElement('a');
+    const usePng=globals.exportFormat==='png';
+    a.download=`beiza-${sn}-${String(i+1).padStart(2,'0')}.${usePng?'png':'jpg'}`;
+    a.href=usePng?cv.toDataURL('image/png'):cv.toDataURL('image/jpeg',0.98);
+    a.click();
+  }finally{
+    if(host&&host.parentNode)host.parentNode.removeChild(host);
+  }
+}
+async function exportAll(){
+  const ov=document.getElementById('expOv'),msg=document.getElementById('expMsg'),bar=document.getElementById('expBar');
+  ov.classList.add('show');
+  const total=slides.length;
   if(document.fonts&&document.fonts.ready)try{await document.fonts.ready;}catch(_){}
   for(let i=0;i<total;i++){
-    const s=slides[i];
     msg.textContent=`Exporting ${i+1} / ${total}`;
     bar.style.width=`${(i/total)*100}%`;
-    let bgColor='#ffffff';
-    if(s.type==='pan'||s.bgImage)bgColor='#000000';
-    else bgColor=(TC[s.theme]||TC.cream).bg;
-    let host=null;
     try{
-      const html=renderSlide(s,i,{exportW:EW,exportH:EH});
-      host=document.createElement('div');
-      host.setAttribute('aria-hidden','true');
-      /* Top-left, fully opaque, under .exp-ov (z-index 9999): opacity:0 and large negative left both break html2canvas layout. */
-      host.style.cssText=`position:fixed;left:0;top:0;z-index:9990;pointer-events:none;width:${EW}px;height:${EH}px;overflow:hidden;background:${bgColor};`;
-      host.innerHTML=html;
-      const root=host.firstElementChild;
-      if(!root)throw new Error('Export render produced no root element');
-      document.body.appendChild(host);
-      await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
-      await exportInlineImagesToDataUrl(root);
-      await exportWaitImages(root);
-      await exportPrepSlide4Photos(root,1);
-      await rasterizeSvgDataUrlsInClone(root,1);
-      await exportWaitImages(root);
-      await new Promise(r=>setTimeout(r,80));
-      const sx=window.scrollX,sy=window.scrollY;
-      window.scrollTo(0,0);
-      let cv;
-      try{
-        cv=await html2canvas(root,{
-          scale:1,
-          scrollX:0,
-          scrollY:0,
-          useCORS:true,
-          allowTaint:false,
-          backgroundColor:bgColor,
-          logging:false,
-          foreignObjectRendering:false,
-          onclone(_doc,cloned){exportPrepBlendFallback(cloned);exportPrepMediaClone(_doc,cloned);}
-        });
-      }finally{
-        window.scrollTo(sx,sy);
-      }
-      const a=document.createElement('a');
-      const usePng=globals.exportFormat==='png';
-      a.download=`beiza-${sn}-${String(i+1).padStart(2,'0')}.${usePng?'png':'jpg'}`;
-      a.href=usePng?cv.toDataURL('image/png'):cv.toDataURL('image/jpeg',0.98);
-      a.click();
+      await exportSlideToFile(i);
     }catch(err){
       console.error(err);
       const em=(err&&err.message)?String(err.message):String(err);
       const tip=!/JPEG and PNG/.test(em)&&/taint|toDataURL|file/i.test(em)?' — PNG and JPEG use the same canvas step; with linked assets, open via http://localhost (e.g. Live Server).':'';
       alert(`Export failed on slide ${i+1}: ${em}${tip}`);
-    }finally{
-      if(host&&host.parentNode)host.parentNode.removeChild(host);
     }
     await new Promise(r=>setTimeout(r,120));
   }
   bar.style.width='100%';setTimeout(()=>{ov.classList.remove('show');bar.style.width='0%';},500);
+}
+async function exportCurrentSlide(){
+  if(!slides.length)return;
+  const ov=document.getElementById('expOv'),msg=document.getElementById('expMsg'),bar=document.getElementById('expBar');
+  ov.classList.add('show');
+  msg.textContent=`Exporting slide ${cur+1}…`;
+  bar.style.width='15%';
+  if(document.fonts&&document.fonts.ready)try{await document.fonts.ready;}catch(_){}
+  bar.style.width='40%';
+  try{
+    await exportSlideToFile(cur);
+    bar.style.width='100%';
+  }catch(err){
+    console.error(err);
+    const em=(err&&err.message)?String(err.message):String(err);
+    const tip=!/JPEG and PNG/.test(em)&&/taint|toDataURL|file/i.test(em)?' — PNG and JPEG use the same canvas step; with linked assets, open via http://localhost (e.g. Live Server).':'';
+    alert(`Export failed: ${em}${tip}`);
+  }
+  setTimeout(()=>{ov.classList.remove('show');bar.style.width='0%';},500);
 }
 (function initDeckDrop(){
   if(window.__beizaDnd)return;
