@@ -685,9 +685,9 @@ function renderSlide(s,idx,opt){
     const cv=s.ctaVariant||'dark';
     const cta=cv==='white'?`background:#fff;color:#1A1714;border:1px solid rgba(255,255,255,.35);`:cv==='outline'?`background:transparent;color:#fff;border:1px solid rgba(255,255,255,.6);`:`background:${c.ctaBg};color:${c.ctaC};border:none;`;
     const tw=s.outroTitlePx!=null?Math.round(s.outroTitlePx*fScale):tf;
-    inn=`<div class="s-outro-stack" style="padding-top:${Math.round(h*(pt/100))}px;--omw:${Math.round(ms*fScale)}px;--ogap:${sp(og)}px">`+
+    inn=`<div class="s-outro-stack" style="padding-top:${Math.round(h*(pt/100))}px;--omw:${Math.round(ms*fScale)}px;--ogap:${sp(og)}px;width:100%;max-width:100%;box-sizing:border-box;align-self:stretch;">`+
       `<img src="${mascotUrl}" alt="" class="s-outro-mascot"/>`+
-      `<div style="margin-top:${nudge}px;display:flex;flex-direction:column;align-items:center;gap:${sp(4)}px">`+
+      `<div style="margin-top:${nudge}px;display:flex;flex-direction:column;align-items:center;gap:${sp(4)}px;width:100%;max-width:100%;box-sizing:border-box;">`+
       outroTaglineBlock(s,c,sub,otp,tagWt,fScale)+
       (s.showTitle&&s.title?`<div class="s-title" style="color:${tx2};font-size:${tw}px">${tH(s.title,s.hw)}</div>`:'')+
       (s.showPara&&s.para?`<div class="s-para" style="color:${tx1};font-size:${opp}px;font-weight:${owt}">${s.para}</div>`:'')+
