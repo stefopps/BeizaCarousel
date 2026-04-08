@@ -685,12 +685,14 @@ function renderSlide(s,idx,opt){
     const cv=s.ctaVariant||'dark';
     const cta=cv==='white'?`background:#fff;color:#1A1714;border:1px solid rgba(255,255,255,.35);`:cv==='outline'?`background:transparent;color:#fff;border:1px solid rgba(255,255,255,.6);`:`background:${c.ctaBg};color:${c.ctaC};border:none;`;
     const tw=s.outroTitlePx!=null?Math.round(s.outroTitlePx*fScale):tf;
-    inn=`<div class="s-outro-stack" style="padding-top:${Math.round(h*(pt/100))}px;--omw:${Math.round(ms*fScale)}px;--ogap:${sp(og)}px;width:100%;max-width:100%;box-sizing:border-box;align-self:stretch;">`+
+    /* html2canvas clone often drops inherited % widths — use px from slide w so URL line cannot collapse. */
+    const stackW=w,colW=Math.round(w*0.92),paraW=Math.min(Math.round(w*0.88),Math.round(260*w/Math.max(1,DIMS[fmt][0])));
+    inn=`<div class="s-outro-stack" style="padding-top:${Math.round(h*(pt/100))}px;--omw:${Math.round(ms*fScale)}px;--ogap:${sp(og)}px;width:${stackW}px;min-width:${stackW}px;max-width:${stackW}px;box-sizing:border-box;flex-shrink:0;">`+
       `<img src="${mascotUrl}" alt="" class="s-outro-mascot"/>`+
-      `<div style="margin-top:${nudge}px;display:flex;flex-direction:column;align-items:center;gap:${sp(4)}px;width:100%;max-width:100%;box-sizing:border-box;">`+
+      `<div style="margin-top:${nudge}px;display:flex;flex-direction:column;align-items:center;gap:${sp(4)}px;width:${colW}px;min-width:${colW}px;max-width:${colW}px;box-sizing:border-box;flex-shrink:0;">`+
       outroTaglineBlock(s,c,sub,otp,tagWt,fScale)+
-      (s.showTitle&&s.title?`<div class="s-title" style="color:${tx2};font-size:${tw}px">${tH(s.title,s.hw)}</div>`:'')+
-      (s.showPara&&s.para?`<div class="s-para" style="color:${tx1};font-size:${opp}px;font-weight:${owt}">${s.para}</div>`:'')+
+      (s.showTitle&&s.title?`<div class="s-title" style="color:${tx2};font-size:${tw}px;max-width:${colW}px">${tH(s.title,s.hw)}</div>`:'')+
+      (s.showPara&&s.para?`<div class="s-para" style="color:${tx1};font-size:${opp}px;font-weight:${owt};width:${paraW}px;min-width:${paraW}px;max-width:${paraW}px;box-sizing:border-box;word-break:break-all;text-align:center;">${s.para}</div>`:'')+
       `</div>`+
       (s.showCTA&&s.ctaText?`<div class="s-cta" style="${cta}margin-top:${sp(10)}px;padding:${sp(6)}px ${sp(13)}px;font-size:${pf}px;font-family:'Alliance',sans-serif;font-weight:600;border-radius:${sp(4)}px">${s.ctaText}</div>`:'')+
       `</div>`;
@@ -744,8 +746,10 @@ function renderSlide(s,idx,opt){
   const symEl=s.symbolImage?`<div style="position:absolute;left:${s.symbolX||50}%;top:${s.symbolY||30}%;transform:translate(-50%,-50%);width:${symSz}px;height:${symSz}px;z-index:3;mix-blend-mode:${s.symbolBlend||'multiply'};pointer-events:none"><img src="${s.symbolImage}" style="width:100%;height:100%;object-fit:contain;display:block;"></div>`:'';
   const innerCls=outroStack?'s-inner':(s.slide3symbol||s.slide4photo!==undefined||s.slide5symbol||slideHasVisibleMediaStrip(s)?'s-inner-abs':'s-inner');
   const expSt=exportMode?`width:${w}px;height:${h}px;box-shadow:none;`:'';
+  const innerSt=outroStack&&exportMode?`width:${w}px;min-width:${w}px;max-width:${w}px;box-sizing:border-box;align-items:stretch;`:'';
   const rootId=exportMode?`beiza-exp-${idx}`:`sc-${idx}`;
-  return`<div class="sc ${fmt}${sel?' sel':''}" id="${rootId}" style="${expSt}background:${s.bgImage?'#000':c.bg}">${bgH}<div class="s-tex"></div>${symEl}<div class="${innerCls}">${inn}</div>${ft}${mascEl}${swipeEl}</div>`;
+  const dataExp=exportMode?` data-export-w="${w}"`:'';
+  return`<div class="sc ${fmt}${sel?' sel':''}" id="${rootId}"${dataExp} style="${expSt}background:${s.bgImage?'#000':c.bg}">${bgH}<div class="s-tex"></div>${symEl}<div class="${innerCls}"${innerSt?` style="${innerSt}"`:''}>${inn}</div>${ft}${mascEl}${swipeEl}</div>`;
 }
 function renderPan(s,idx,sel,w,h,opt){
   opt=opt||{};
@@ -1432,6 +1436,53 @@ async function exportPrepSlide4Photos(rootEl,html2canvasScale){
   })));
 }
 /** Strip native audio + custom UI from export clone; caption = first cue + emphasis (matches no-audio preview). */
+/**
+ * html2canvas flex + word-break:break-all can still resolve min-content to ~1ch in the clone.
+ * Force block-level pixel widths on the outro stack (and inner column / URL) inside the iframe clone.
+ */
+function exportPatchOutroForH2C(_doc,cloned){
+  if(!cloned||cloned.nodeType!==1)return;
+  const el=cloned.hasAttribute('data-export-w')?cloned:cloned.querySelector('[data-export-w]');
+  if(!el)return;
+  const w=parseInt(el.getAttribute('data-export-w'),10);
+  if(!isFinite(w)||w<32)return;
+  const pw0=(typeof fmt!=='undefined'&&DIMS&&DIMS[fmt])?DIMS[fmt][0]:340;
+  const colW=Math.round(w*0.92),paraW=Math.min(Math.round(w*0.88),Math.round(260*w/Math.max(1,pw0)));
+  const inner=el.querySelector&&el.querySelector('.s-inner');
+  if(inner){
+    inner.style.setProperty('align-items','stretch','important');
+    inner.style.setProperty('width',w+'px','important');
+    inner.style.setProperty('min-width',w+'px','important');
+    inner.style.setProperty('max-width',w+'px','important');
+    inner.style.setProperty('box-sizing','border-box');
+  }
+  el.querySelectorAll('.s-outro-stack').forEach(st=>{
+    st.style.setProperty('display','block','important');
+    st.style.setProperty('width',w+'px','important');
+    st.style.setProperty('min-width',w+'px','important');
+    st.style.setProperty('max-width',w+'px','important');
+    st.style.setProperty('flex-shrink','0');
+    st.style.setProperty('box-sizing','border-box');
+  });
+  el.querySelectorAll('.s-outro-stack .s-outro-mascot+div').forEach(col=>{
+    col.style.setProperty('display','block','important');
+    col.style.setProperty('width',colW+'px','important');
+    col.style.setProperty('min-width',colW+'px','important');
+    col.style.setProperty('max-width',colW+'px','important');
+    col.style.setProperty('margin-left','auto');
+    col.style.setProperty('margin-right','auto');
+    col.style.setProperty('box-sizing','border-box');
+  });
+  el.querySelectorAll('.s-outro-stack .s-para').forEach(p=>{
+    p.style.setProperty('display','block','important');
+    p.style.setProperty('width',paraW+'px','important');
+    p.style.setProperty('min-width',paraW+'px','important');
+    p.style.setProperty('max-width',paraW+'px','important');
+    p.style.setProperty('box-sizing','border-box');
+    p.style.setProperty('word-break','break-all');
+    p.style.setProperty('text-align','center');
+  });
+}
 function exportPrepMediaClone(doc,cloned){
   const slidesArr=typeof slides!=='undefined'?slides:[];
   cloned.querySelectorAll('audio').forEach(a=>{try{a.pause();}catch(_){} a.remove();});
@@ -1705,7 +1756,7 @@ async function exportSlideToFile(i){
         backgroundColor:bgColor,
         logging:false,
         foreignObjectRendering:false,
-        onclone(_doc,cloned){exportPrepBlendFallback(cloned);exportPrepMediaClone(_doc,cloned);}
+        onclone(_doc,cloned){exportPatchOutroForH2C(_doc,cloned);exportPrepBlendFallback(cloned);exportPrepMediaClone(_doc,cloned);}
       });
     }finally{
       window.scrollTo(sx,sy);
