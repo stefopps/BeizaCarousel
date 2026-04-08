@@ -99,10 +99,13 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
 .s-tagline{font-family:'Alliance',sans-serif;font-weight:400;margin-bottom:6px;opacity:.85;}
 .s-title{font-family:'Alliance',sans-serif;font-weight:900;line-height:1.06;margin-bottom:9px;}
 .s-title .hw{color:#C8905A;}
-.s-para{font-family:'Alliance',sans-serif;font-weight:300;line-height:1.62;max-width:260px;}
+.s-para{font-family:'Alliance',sans-serif;font-weight:300;line-height:1.62;max-width:min(260px,100%);min-width:0;overflow-wrap:anywhere;word-break:break-word;box-sizing:border-box;}
 .s-cta{border-radius:4px;font-family:'Alliance',sans-serif;font-weight:600;}
-.s-outro-stack{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:28px 20px 52px;box-sizing:border-box;min-height:100%;position:relative;z-index:6;}
-.s-outro-mascot{display:block;flex-shrink:0;height:auto;width:var(--omw,100px);margin:0 auto var(--ogap,14px);}
+.s-outro-stack{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:28px 20px 52px;box-sizing:border-box;min-height:100%;width:100%;max-width:100%;min-width:0;position:relative;z-index:6;}
+.s-outro-stack .s-tagline{max-width:100%;box-sizing:border-box;overflow-wrap:break-word;}
+.s-inner>.s-outro-stack{align-self:stretch;}
+.s-outro-stack>div:first-of-type:not(.s-cta){width:100%;max-width:100%;min-width:0;box-sizing:border-box;}
+.s-outro-mascot{display:block;flex-shrink:0;height:auto;width:var(--omw,100px);max-width:min(100%,var(--omw,100px));margin:0 auto var(--ogap,14px);}
 .s-cnt{border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'Alliance',sans-serif;font-weight:700;margin-bottom:11px;flex-shrink:0;}
 .s-foot{position:absolute;bottom:0;left:0;right:0;padding:7px 10px;display:flex;align-items:center;justify-content:space-between;}
 .au-wrap{display:flex;align-items:center;gap:6px;}
@@ -1639,7 +1642,8 @@ async function exportAll(){
       const html=renderSlide(s,i,{exportW:EW,exportH:EH});
       host=document.createElement('div');
       host.setAttribute('aria-hidden','true');
-      host.style.cssText=`position:fixed;left:0;top:0;z-index:-9999;opacity:0;pointer-events:none;width:${EW}px;height:${EH}px;overflow:hidden;background:${bgColor};`;
+      /* Top-left, fully opaque, under .exp-ov (z-index 9999): opacity:0 and large negative left both break html2canvas layout. */
+      host.style.cssText=`position:fixed;left:0;top:0;z-index:9990;pointer-events:none;width:${EW}px;height:${EH}px;overflow:hidden;background:${bgColor};`;
       host.innerHTML=html;
       const root=host.firstElementChild;
       if(!root)throw new Error('Export render produced no root element');
@@ -1651,7 +1655,24 @@ async function exportAll(){
       await rasterizeSvgDataUrlsInClone(root,1);
       await exportWaitImages(root);
       await new Promise(r=>setTimeout(r,80));
-      const cv=await html2canvas(root,{scale:1,useCORS:true,allowTaint:false,backgroundColor:bgColor,logging:false,foreignObjectRendering:false,onclone(_doc,cloned){exportPrepBlendFallback(cloned);exportPrepMediaClone(_doc,cloned);}});
+      const sx=window.scrollX,sy=window.scrollY;
+      window.scrollTo(0,0);
+      let cv;
+      try{
+        cv=await html2canvas(root,{
+          scale:1,
+          scrollX:0,
+          scrollY:0,
+          useCORS:true,
+          allowTaint:false,
+          backgroundColor:bgColor,
+          logging:false,
+          foreignObjectRendering:false,
+          onclone(_doc,cloned){exportPrepBlendFallback(cloned);exportPrepMediaClone(_doc,cloned);}
+        });
+      }finally{
+        window.scrollTo(sx,sy);
+      }
       const a=document.createElement('a');
       const usePng=globals.exportFormat==='png';
       a.download=`beiza-${sn}-${String(i+1).padStart(2,'0')}.${usePng?'png':'jpg'}`;
