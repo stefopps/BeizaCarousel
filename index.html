@@ -103,7 +103,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
 .s-cta{border-radius:4px;font-family:'Alliance',sans-serif;font-weight:600;}
 /* Outro: stretch to slide width so inner % widths resolve (avoid shrink-to-fit → 0 width + one-char wraps). */
 .s-inner>.s-outro-stack{align-self:stretch;width:100%;max-width:100%;box-sizing:border-box;}
-.s-outro-stack{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:28px 16px 52px;box-sizing:border-box;min-height:100%;position:relative;z-index:6;}
+.s-outro-stack{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:28px 20px 52px;box-sizing:border-box;min-height:100%;position:relative;z-index:6;}
 .s-outro-stack .s-tagline{max-width:100%;box-sizing:border-box;overflow-wrap:break-word;}
 .s-outro-stack .s-outro-mascot+div{display:flex;flex-direction:column;align-items:center;width:100%;max-width:100%;box-sizing:border-box;padding:0 4px;}
 .s-outro-stack .s-para{max-width:min(260px,calc(100% - 8px));margin-left:auto;margin-right:auto;word-break:break-all;}
@@ -685,8 +685,9 @@ function renderSlide(s,idx,opt){
     const cv=s.ctaVariant||'dark';
     const cta=cv==='white'?`background:#fff;color:#1A1714;border:1px solid rgba(255,255,255,.35);`:cv==='outline'?`background:transparent;color:#fff;border:1px solid rgba(255,255,255,.6);`:`background:${c.ctaBg};color:${c.ctaC};border:none;`;
     const tw=s.outroTitlePx!=null?Math.round(s.outroTitlePx*fScale):tf;
-    /* html2canvas clone often drops inherited % widths — use px from slide w so URL line cannot collapse. */
-    const stackW=w,colW=Math.round(w*0.92),paraW=Math.min(Math.round(w*0.88),Math.round(260*w/Math.max(1,DIMS[fmt][0])));
+    /* Match .s-inner horizontal padding (20+20); full slide width here overflows the flex content box → off-center preview/export. */
+    const innerPadX=20,innerW=Math.max(1,w-2*innerPadX);
+    const stackW=innerW,colW=Math.round(innerW*0.92),paraW=Math.min(Math.round(innerW*0.88),Math.round(260*w/Math.max(1,DIMS[fmt][0])));
     inn=`<div class="s-outro-stack" style="padding-top:${Math.round(h*(pt/100))}px;--omw:${Math.round(ms*fScale)}px;--ogap:${sp(og)}px;width:${stackW}px;min-width:${stackW}px;max-width:${stackW}px;box-sizing:border-box;flex-shrink:0;">`+
       `<img src="${mascotUrl}" alt="" class="s-outro-mascot"/>`+
       `<div style="margin-top:${nudge}px;display:flex;flex-direction:column;align-items:center;gap:${sp(4)}px;width:${colW}px;min-width:${colW}px;max-width:${colW}px;box-sizing:border-box;flex-shrink:0;">`+
@@ -1446,8 +1447,9 @@ function exportPatchOutroForH2C(_doc,cloned){
   if(!el)return;
   const w=parseInt(el.getAttribute('data-export-w'),10);
   if(!isFinite(w)||w<32)return;
+  const padX=20,innerW=Math.max(1,w-2*padX);
   const pw0=(typeof fmt!=='undefined'&&DIMS&&DIMS[fmt])?DIMS[fmt][0]:340;
-  const colW=Math.round(w*0.92),paraW=Math.min(Math.round(w*0.88),Math.round(260*w/Math.max(1,pw0)));
+  const colW=Math.round(innerW*0.92),paraW=Math.min(Math.round(innerW*0.88),Math.round(260*w/Math.max(1,pw0)));
   const inner=el.querySelector&&el.querySelector('.s-inner');
   if(inner){
     inner.style.setProperty('align-items','stretch','important');
@@ -1457,10 +1459,12 @@ function exportPatchOutroForH2C(_doc,cloned){
     inner.style.setProperty('box-sizing','border-box');
   }
   el.querySelectorAll('.s-outro-stack').forEach(st=>{
-    st.style.setProperty('display','block','important');
-    st.style.setProperty('width',w+'px','important');
-    st.style.setProperty('min-width',w+'px','important');
-    st.style.setProperty('max-width',w+'px','important');
+    st.style.setProperty('display','flex','important');
+    st.style.setProperty('flex-direction','column','important');
+    st.style.setProperty('align-items','center','important');
+    st.style.setProperty('width',innerW+'px','important');
+    st.style.setProperty('min-width',innerW+'px','important');
+    st.style.setProperty('max-width',innerW+'px','important');
     st.style.setProperty('flex-shrink','0');
     st.style.setProperty('box-sizing','border-box');
   });
