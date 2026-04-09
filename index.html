@@ -82,6 +82,8 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
 .rp-variant-tools{display:none;flex-wrap:wrap;align-items:center;gap:8px;font-size:9px;color:var(--sand);}
 .rp-variant-row-active.show .rp-variant-tools{display:flex;}
 .rp-variant-tools label{cursor:pointer;display:flex;align-items:center;gap:4px;}
+.rp-variant-search{display:none;align-items:center;gap:6px;width:100%;}
+.rp-variant-row-active.show .rp-variant-search{display:flex;}
 .variant-jump{display:flex;align-items:center;gap:6px;width:100%;}
 .variant-jump .fi{flex:1;min-width:120px;padding:3px 6px;font-size:9px;}
 .variant-jump .s-btn{padding:4px 8px;font-size:9px;}
@@ -318,13 +320,15 @@ input[type=range]{width:100%;margin:2px 0;accent-color:var(--sand);}
           </span>
           <button class="s-btn" type="button" id="variantExitBtn" onclick="exitVariants()">✕ Exit</button>
         </div>
-        <div class="rp-variant-tools" id="rpVariantTools">
-          <label title="Edit CSV cells for the current row; preview updates after a short pause"><input type="checkbox" id="variantLiveEditToggle" onchange="setVariantLiveEdit(this.checked)"> Live-edit row</label>
-          <button type="button" class="s-btn" style="font-size:9px;padding:4px 10px" onclick="saveVariantsCsv()" title="Write all rows back to CSV (pick file to overwrite, or download)">Save CSV</button>
+        <div class="rp-variant-search">
           <div class="variant-jump">
             <input id="variantJumpIn" class="fi" type="text" placeholder="Find symbol / number (e.g. aya, mpatopato, 42)" onkeydown="if(event.key==='Enter'){variantJumpSearch();}">
             <button type="button" class="s-btn" onclick="variantJumpSearch()">Find</button>
           </div>
+        </div>
+        <div class="rp-variant-tools" id="rpVariantTools">
+          <label title="Edit CSV cells for the current row; preview updates after a short pause"><input type="checkbox" id="variantLiveEditToggle" onchange="setVariantLiveEdit(this.checked)"> Live-edit row</label>
+          <button type="button" class="s-btn" style="font-size:9px;padding:4px 10px" onclick="saveVariantsCsv()" title="Write all rows back to CSV (pick file to overwrite, or download)">Save CSV</button>
         </div>
         <div class="variant-row-fields" id="variantRowFields"></div>
       </div>
@@ -506,6 +510,11 @@ function variantsCsvRowToDelta(row,baseSession){
     if(emNum!=null)slides['2'].slide3CaptionEmPct=emNum;
     if(srtRaw.trim())slides['2'].slide3Srt=srtRaw;
   }
+  const cnMeta=get('carouselnum').replace(/^\s+|\s+$/g,'');
+  if(cnMeta){
+    var ixCntNum=findCounterContentIx();
+    slides[String(ixCntNum)]=Object.assign({},slides[String(ixCntNum)]||{},{cntNumberText:cnMeta});
+  }
   if(/^#[0-9A-Fa-f]{6}$/.test(capColor))slides['2']=Object.assign({},slides['2']||{},{slide3CaptionColor:capColor});
   if(/^#[0-9A-Fa-f]{6}$/.test(karaColor))slides['2']=Object.assign({},slides['2']||{},{slide3CaptionKaraokeColor:karaColor});
   if(/^#[0-9A-Fa-f]{6}$/.test(cntKaraColor)){
@@ -586,6 +595,14 @@ function applyVariantRowImages(row,merged){
   return tasks.length?Promise.all(tasks):Promise.resolve();
 }
 function variantModeActive(){return variantRows.length>0;}
+function activeVariantCarouselNum(){
+  if(!variantModeActive())return '';
+  var row=variantRows[variantIdx]||{};
+  var raw=String(row.carouselnum||'').trim();
+  if(!raw)return '';
+  if(/^\d+$/.test(raw))return String(parseInt(raw,10)).padStart(2,'0');
+  return raw;
+}
 function setVariantChromeVisible(on){
   const act=document.getElementById('rpVariantActive');
   if(act)act.classList.toggle('show',!!on);
@@ -1275,6 +1292,15 @@ function renderPan(s,idx,sel,w,h,opt){
 function slLabel(s,i){if(s.type==='intro')return'Intro';if(s.type==='outro')return'Outro';if(s.type==='pan'){const pg=panGroups[s.panGroupId];return`Pan ${pg?pg.slideIds.indexOf(i)===0?'A':'B':'?'}`;}return`Slide ${i}`;}
 /** Counter numeral shown on counter content slide: prefer CSV/meta carouselNum, else deck order. */
 function counterNumberForSlide(s,cIdx,idx){
+  var vnum=activeVariantCarouselNum();
+  if(vnum)return vnum;
+  if(s&&s.cntNumberText!=null){
+    var rowNum=String(s.cntNumberText).trim();
+    if(rowNum){
+      if(/^\d+$/.test(rowNum))return String(parseInt(rowNum,10)).padStart(2,'0');
+      return rowNum;
+    }
+  }
   if(s&&s.showCounter!==false&&deckMeta&&deckMeta.carouselNum!=null){
     var raw=String(deckMeta.carouselNum).trim();
     if(raw){
@@ -1904,7 +1930,7 @@ function loadSessionFile(e){const f=e.target.files[0];if(!f)return;const r=new F
 /** Deep clone for delta merge (no shared refs). */
 function deepClone(o){return JSON.parse(JSON.stringify(o));}
 /** Fields allowed in slide deltas — text + caption metadata only (no images / binary). */
-var DELTA_SLIDE_KEYS=['title','hw','para','tagline','ctaText','ctaVariant','qmarkText','authorName','authorSub','theme','slide3Srt','slide3CaptionBoostWords','slide3CaptionEmPct','slide3CaptionScale','slide3CaptionNudgePct','slide3TitleBottomPct','slide3CaptionElasticLand','slide3CaptionColor','slide3CaptionKaraokeColor','slide3AdTopPct','slide3QmarkYpct','slide3ShowMedia','cntMediaSrt','cntCaptionBoostWords','cntCaptionEmPct','cntCaptionScale','cntCaptionElasticLand','cntCaptionKaraokeColor','cntMediaBottomPct','cntAlign','cntStackX','cntStackY','cntNumPct','cntTitPct','cntTitGap','cntWeight','titWeight','showTitle','showPara','showCounter','showTagline','showCTA','outroTagPill','outroTagPillAccent','outroTagPillBg','outroPadTop','outroGap','outroTextNudge','outroForceWhite','outroTagPx','outroParaPx','outroTitlePx','slide5BoxTopPct','slide5BoxHpct','slide5InsetPct','slide5FontBoost','counterTextWhite'];
+var DELTA_SLIDE_KEYS=['title','hw','para','tagline','ctaText','ctaVariant','qmarkText','authorName','authorSub','theme','slide3Srt','slide3CaptionBoostWords','slide3CaptionEmPct','slide3CaptionScale','slide3CaptionNudgePct','slide3TitleBottomPct','slide3CaptionElasticLand','slide3CaptionColor','slide3CaptionKaraokeColor','slide3AdTopPct','slide3QmarkYpct','slide3ShowMedia','cntMediaSrt','cntCaptionBoostWords','cntCaptionEmPct','cntCaptionScale','cntCaptionElasticLand','cntCaptionKaraokeColor','cntMediaBottomPct','cntAlign','cntStackX','cntStackY','cntNumPct','cntTitPct','cntTitGap','cntWeight','titWeight','cntNumberText','showTitle','showPara','showCounter','showTagline','showCTA','outroTagPill','outroTagPillAccent','outroTagPillBg','outroPadTop','outroGap','outroTextNudge','outroForceWhite','outroTagPx','outroParaPx','outroTitlePx','slide5BoxTopPct','slide5BoxHpct','slide5InsetPct','slide5FontBoost','counterTextWhite'];
 var DELTA_SKIP_VALUES=new Set(['bgImage','symbolImage','slide3AudioData','slide4photo','cntMediaAudio','mascotUrl','imageDataUrl']);
 function pickSlideDelta(s){
   if(!s||typeof s!=='object')return null;
