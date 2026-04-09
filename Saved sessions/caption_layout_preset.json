@@ -2,8 +2,10 @@
   "presetSchemaVersion": 1,
   "sourceSession": "beiza-Duafe Base.json",
   "slide3CaptionScale": 150.27027027027026,
-  "slide3TitleBottomPct": 7.116216216216216,
-  "slide3CaptionNudgePct": 6.0,
+  "slide3TitleBottomPct": 8.0,
+  "slide3CaptionNudgePct": 43.35135135135135,
   "slide3CaptionEmPct": 154.48648648648648,
-  "slide3CaptionElasticLand": false
+  "slide3CaptionElasticLand": false,
+  "slide3CaptionColor": "#FFFFFF",
+  "slide3CaptionKaraokeColor": "#DF9200"
 }

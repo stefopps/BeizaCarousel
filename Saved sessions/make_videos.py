@@ -85,6 +85,8 @@ CAPTION_LAYOUT_KEYS = (
     "slide3CaptionNudgePct",
     "slide3CaptionEmPct",
     "slide3CaptionElasticLand",
+    "slide3CaptionColor",
+    "slide3CaptionKaraokeColor",
 )
 
 # Base font size as a fraction of PlayResY — scales correctly at any DPI/resolution.
@@ -224,6 +226,18 @@ def hex_to_ass_colour(hex_str: str) -> str:
     return f"&H00{b:02X}{g:02X}{r:02X}"
 
 
+def normalize_hex_color(value: Any) -> str | None:
+    """#RRGGBB normalizer used by studio color controls / overrides."""
+    s = str(value or "").strip()
+    if not s:
+        return None
+    if not s.startswith("#"):
+        s = "#" + s
+    if not re.match(r"^#[0-9A-Fa-f]{6}$", s):
+        return None
+    return s.upper()
+
+
 def _tc_row(theme: str | None) -> dict[str, str]:
     return dict(TC.get(theme or "cream") or TC["cream"])
 
@@ -255,13 +269,30 @@ def caption_accent_hex(slide: dict) -> str:
 
 def caption_primary_hex(m: dict[str, Any]) -> str:
     """index.html renderSlideMediaStrip: captionLight ? #111 : white."""
+    override = normalize_hex_color(m.get("captionColorOverride"))
+    if override:
+        return override
     if m.get("captionLight"):
         return "#111111"
     return "#FFFFFF"
 
 
+def caption_karaoke_hex(slide: dict, m: dict[str, Any]) -> str:
+    """Color for active karaoke/boost words in ASS + studio preview."""
+    override = normalize_hex_color(m.get("captionKaraokeColorOverride"))
+    if override:
+        return override
+    if m.get("captionLight"):
+        # Match browser default for light strips: boosted/active words stay dark.
+        return "#111111"
+    return caption_accent_hex(slide)
+
+
 def caption_muted_ass(m: dict[str, Any]) -> str:
     """Inactive karaoke words — index.html ASS_MUTED_LIGHT / ASS_MUTED_DARK."""
+    override = normalize_hex_color(m.get("captionColorOverride"))
+    if override:
+        return hex_to_ass_colour(override)
     return hex_to_ass_colour("#999999" if m.get("captionLight") else "#B3B3B3")
 
 
@@ -326,7 +357,7 @@ def get_slide_media_for_captions(slide: dict | None) -> dict[str, Any] | None:
             nudge = float(nudge)
         except (TypeError, ValueError):
             nudge = 6.0
-        bot = min(30.0, max(0.5, t_b + nudge))
+        bot = min(100.0, max(0.0, t_b + nudge))
         return {
             "srt": slide.get("slide3Srt") or "",
             "srtCues": cues,
@@ -340,6 +371,10 @@ def get_slide_media_for_captions(slide: dict | None) -> dict[str, Any] | None:
             else 130,
             "captionBoostCsv": slide.get("slide3CaptionBoostWords"),
             "captionElasticLand": slide.get("slide3CaptionElasticLand") is not False,
+            "captionColorOverride": normalize_hex_color(slide.get("slide3CaptionColor")),
+            "captionKaraokeColorOverride": normalize_hex_color(
+                slide.get("slide3CaptionKaraokeColor")
+            ),
         }
     if is_counter_content_slide(slide):
         if slide.get("cntMediaShow") is not True:
@@ -370,6 +405,10 @@ def get_slide_media_for_captions(slide: dict | None) -> dict[str, Any] | None:
             else 130,
             "captionBoostCsv": slide.get("cntCaptionBoostWords"),
             "captionElasticLand": slide.get("cntCaptionElasticLand") is not False,
+            "captionColorOverride": normalize_hex_color(slide.get("cntCaptionColor")),
+            "captionKaraokeColorOverride": normalize_hex_color(
+                slide.get("cntCaptionKaraokeColor")
+            ),
         }
     return None
 
@@ -542,13 +581,11 @@ def build_ass_for_ffmpeg_pack(
     boost = m.get("captionBoostCsv")
 
     primary_ass = hex_to_ass_colour(caption_primary_hex(m))
-    # Match index.html formatCaptionRich: on light captions (slide 3 / white), **boost** stays
-    # black (#111) with heavier weight + size — not theme gold. Dark strips still use accent gold.
+    # Default matches browser behavior; studio color overrides can replace both base and karaoke.
+    emph_ass = hex_to_ass_colour(caption_karaoke_hex(slide, m))
     if m.get("captionLight"):
-        emph_ass = primary_ass
         border_style, outline_w, shadow_w = 1, 0, 0
     else:
-        emph_ass = hex_to_ass_colour(caption_accent_hex(slide))
         border_style, outline_w, shadow_w = 3, 3, 0
 
     mut_ass = caption_muted_ass(m)
@@ -671,14 +708,13 @@ def format_cue_time_range_s(cue: dict) -> str:
 
 
 def bottom_pct_to_slide3_fields(bottom_total: float) -> tuple[float, float]:
-    """Split ASS `bottom` % into slide3TitleBottomPct + slide3CaptionNudgePct (matches editor ranges)."""
-    b = max(4.0, min(28.0, float(bottom_total)))
-    if b >= 8.0:
-        nudge = 6.0
-        t_b = max(0.5, b - nudge)
-    else:
-        nudge = max(1.0, round(b * 0.45, 1))
-        t_b = max(0.5, round(b - nudge, 1))
+    """Split ASS `bottom` % into slide3TitleBottomPct + slide3CaptionNudgePct.
+
+    Studio now allows 0..100% so this keeps the title anchor stable and moves via nudge.
+    """
+    b = max(0.0, min(100.0, float(bottom_total)))
+    t_b = 8.0
+    nudge = b - t_b
     return t_b, nudge
 
 
@@ -688,6 +724,8 @@ def apply_studio_knobs_to_slide3(
     caption_scale_pct: float,
     bottom_total_pct: float,
     em_pct: float,
+    caption_color: str | None = None,
+    karaoke_color: str | None = None,
     elastic_land: bool = True,
 ) -> None:
     """Write Tk studio values into slide 3 — same keys FFmpeg ASS reads."""
@@ -696,6 +734,8 @@ def apply_studio_knobs_to_slide3(
     slide["slide3TitleBottomPct"] = t_b
     slide["slide3CaptionNudgePct"] = nudge
     slide["slide3CaptionEmPct"] = max(100.0, min(200.0, float(em_pct)))
+    slide["slide3CaptionColor"] = normalize_hex_color(caption_color)
+    slide["slide3CaptionKaraokeColor"] = normalize_hex_color(karaoke_color)
     slide["slide3CaptionElasticLand"] = bool(elastic_land)
 
 
@@ -742,8 +782,10 @@ def save_caption_layout_preset(
     return out
 
 
-def read_studio_knobs_from_slide3(slide: dict) -> tuple[float, float, float, bool]:
-    """Scale %, combined bottom margin %, emphasis %, elastic land — for studio UI."""
+def read_studio_knobs_from_slide3(
+    slide: dict,
+) -> tuple[float, float, float, bool, str, str]:
+    """Scale %, combined bottom margin %, emphasis %, elastic land, subtitle color, karaoke color."""
     try:
         sc = float(slide.get("slide3CaptionScale"))
     except (TypeError, ValueError):
@@ -762,7 +804,7 @@ def read_studio_knobs_from_slide3(slide: dict) -> tuple[float, float, float, boo
         nudge = float(nudge)
     except (TypeError, ValueError):
         nudge = 6.0
-    bottom_tot = min(30.0, max(4.0, t_b + nudge))
+    bottom_tot = min(100.0, max(0.0, t_b + nudge))
     try:
         em = float(slide.get("slide3CaptionEmPct"))
     except (TypeError, ValueError):
@@ -774,7 +816,9 @@ def read_studio_knobs_from_slide3(slide: dict) -> tuple[float, float, float, boo
         elastic = raw_el
     else:
         elastic = bool(raw_el)
-    return sc, bottom_tot, em, elastic
+    subtitle_col = normalize_hex_color(slide.get("slide3CaptionColor")) or "#111111"
+    karaoke_col = normalize_hex_color(slide.get("slide3CaptionKaraokeColor")) or "#111111"
+    return sc, bottom_tot, em, elastic, subtitle_col, karaoke_col
 
 
 def summarize_caption_settings(data: dict[str, Any]) -> str:
@@ -948,6 +992,20 @@ def _run_ffmpeg_stream(
 
 def _deep_clone(o: Any) -> Any:
     return copy.deepcopy(o)
+
+
+def next_versioned_mp4_path(path: Path) -> Path:
+    """Return a non-overwriting mp4 path: name.mp4, name-v2.mp4, name-v3.mp4..."""
+    if not path.exists():
+        return path
+    stem = path.stem
+    suf = path.suffix or ".mp4"
+    i = 2
+    while True:
+        cand = path.with_name(f"{stem}-v{i}{suf}")
+        if not cand.exists():
+            return cand
+        i += 1
 
 
 def read_variants_csv(path: Path) -> list[dict[str, str]]:
@@ -1355,7 +1413,7 @@ def process_csv_pipeline(
         globs = merged.get("globals") if isinstance(merged.get("globals"), dict) else None
         slide = slides[idx3]
         m = get_slide_media_for_captions(slide)
-        out_mp4 = out_dir / f"{symbol}.mp4"
+        out_mp4 = next_versioned_mp4_path(out_dir / f"{symbol}.mp4")
 
         tmp = Path(tempfile.mkdtemp(prefix="beiza-csv-"))
         try:
@@ -1447,7 +1505,7 @@ def process_session_folder(
         m = get_slide_media_for_captions(slide)
         srt = (m.get("srt") or "").strip() if m else ""
 
-        out_mp4 = out_dir / f"{name}.mp4"
+        out_mp4 = next_versioned_mp4_path(out_dir / f"{name}.mp4")
         tmp = Path(tempfile.mkdtemp(prefix="beiza-vid-"))
         try:
             audio_path = tmp / f"audio{ext}"
@@ -1487,7 +1545,7 @@ def run_caption_studio(initial_json: Path | None = None) -> None:
     """
     import os
     import tkinter as tk
-    from tkinter import filedialog, messagebox, ttk
+    from tkinter import colorchooser, filedialog, messagebox, ttk
 
     try:
         from PIL import Image, ImageDraw, ImageFont, ImageTk
@@ -1554,8 +1612,8 @@ def run_caption_studio(initial_json: Path | None = None) -> None:
         def __init__(self) -> None:
             super().__init__()
             self.title("Carousel — caption layout (cue preview)")
-            self.geometry("520x760")
-            self.minsize(480, 680)
+            self.geometry("620x920")
+            self.minsize(560, 760)
 
             self.session_path: Path | None = None
             self.data: dict[str, Any] | None = None
@@ -1572,13 +1630,40 @@ def run_caption_studio(initial_json: Path | None = None) -> None:
             self._cover_cache_key: tuple[Any, ...] | None = None
             self._cover_cache_img: Any | None = None
             self._anim_land_var = tk.BooleanVar(value=True)
+            self._carry_cover_var = tk.BooleanVar(value=False)
             self._anim_after_ids: list[str] = []
 
             self.scale_var = tk.DoubleVar(value=100.0)
             self.bottom_var = tk.DoubleVar(value=14.0)
             self.em_var = tk.DoubleVar(value=130.0)
+            self.caption_color_var = tk.StringVar(value="#111111")
+            self.karaoke_color_var = tk.StringVar(value="#111111")
 
-            top = ttk.Frame(self, padding=8)
+            # Scroll container so all studio controls remain reachable on smaller displays.
+            wrap = ttk.Frame(self, padding=4)
+            wrap.pack(fill=tk.BOTH, expand=True)
+            self._scroll_canvas = tk.Canvas(wrap, highlightthickness=0)
+            self._scroll_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+            ysb = ttk.Scrollbar(wrap, orient=tk.VERTICAL, command=self._scroll_canvas.yview)
+            ysb.pack(side=tk.RIGHT, fill=tk.Y)
+            self._scroll_canvas.configure(yscrollcommand=ysb.set)
+            self._scroll_body = ttk.Frame(self._scroll_canvas)
+            self._scroll_win = self._scroll_canvas.create_window(
+                (0, 0), window=self._scroll_body, anchor="nw"
+            )
+            self._scroll_body.bind(
+                "<Configure>",
+                lambda _e: self._scroll_canvas.configure(
+                    scrollregion=self._scroll_canvas.bbox("all")
+                ),
+            )
+            self._scroll_canvas.bind(
+                "<Configure>",
+                lambda e: self._scroll_canvas.itemconfigure(self._scroll_win, width=e.width),
+            )
+            self._scroll_canvas.bind_all("<MouseWheel>", self._on_mousewheel, add=True)
+
+            top = ttk.Frame(self._scroll_body, padding=8)
             top.pack(fill=tk.X)
             ttk.Button(top, text="Open session JSON…", command=self.on_open).pack(
                 side=tk.LEFT
@@ -1586,7 +1671,7 @@ def run_caption_studio(initial_json: Path | None = None) -> None:
             self.path_lbl = ttk.Label(top, text="(no file)", foreground="#555")
             self.path_lbl.pack(side=tk.LEFT, padx=10)
 
-            cov = ttk.Frame(self, padding=(8, 0))
+            cov = ttk.Frame(self._scroll_body, padding=(8, 0))
             cov.pack(fill=tk.X)
             ttk.Label(cov, text="Cover:").pack(side=tk.LEFT)
             self.cover_lbl = ttk.Label(cov, text="(not loaded)", foreground="#555")
@@ -1595,20 +1680,25 @@ def run_caption_studio(initial_json: Path | None = None) -> None:
             ttk.Button(cov, text=f"Use {COVER_NAME}", command=self.on_reset_cover).pack(
                 side=tk.LEFT, padx=(6, 0)
             )
+            ttk.Checkbutton(
+                cov,
+                text=f"Use selected cover for render ({COVER_NAME}) on Save",
+                variable=self._carry_cover_var,
+            ).pack(side=tk.LEFT, padx=(8, 0))
             self.btn_play = ttk.Button(cov, text="Play", command=self.on_play)
             self.btn_play.pack(side=tk.LEFT, padx=(12, 0))
             self.btn_pause = ttk.Button(cov, text="Pause", command=self.on_pause, state="disabled")
             self.btn_pause.pack(side=tk.LEFT, padx=(4, 0))
 
             self.line_lbl = ttk.Label(
-                self,
+                self._scroll_body,
                 text="First caption line appears here.",
                 wraplength=480,
                 justify=tk.CENTER,
             )
             self.line_lbl.pack(pady=(4, 4))
 
-            cue_row = ttk.Frame(self, padding=(8, 0))
+            cue_row = ttk.Frame(self._scroll_body, padding=(8, 0))
             cue_row.pack(fill=tk.X)
             ttk.Label(cue_row, text="Preview cue (frame):").pack(side=tk.LEFT)
             self.cue_scale = ttk.Scale(
@@ -1624,7 +1714,7 @@ def run_caption_studio(initial_json: Path | None = None) -> None:
             self.cue_meta_lbl.pack(side=tk.LEFT)
             self.cue_scale.bind("<ButtonRelease-1>", self._on_cue_release, add=True)
 
-            anim_row = ttk.Frame(self, padding=(8, 2))
+            anim_row = ttk.Frame(self._scroll_body, padding=(8, 2))
             anim_row.pack(fill=tk.X)
             ttk.Checkbutton(
                 anim_row,
@@ -1635,58 +1725,103 @@ def run_caption_studio(initial_json: Path | None = None) -> None:
                 side=tk.LEFT, padx=(10, 0)
             )
 
-            prev = ttk.LabelFrame(self, text="Preview (scaled to fit — matches proportions)", padding=6)
+            prev = ttk.LabelFrame(
+                self._scroll_body, text="Preview (scaled to fit — matches proportions)", padding=6
+            )
             prev.pack(fill=tk.BOTH, expand=True, padx=8, pady=4)
             self.canvas = tk.Canvas(prev, width=400, height=620, bg="white", highlightthickness=1)
             self.canvas.pack()
 
-            ctl = ttk.Frame(self, padding=8)
+            ctl = ttk.Frame(self._scroll_body, padding=8)
             ctl.pack(fill=tk.X)
-            ttk.Label(ctl, text="Caption size %").grid(row=0, column=0, sticky="w")
+            tabs = ttk.Notebook(ctl)
+            tabs.pack(fill=tk.X)
+            tab_layout = ttk.Frame(tabs, padding=4)
+            tab_color = ttk.Frame(tabs, padding=4)
+            tabs.add(tab_layout, text="Layout")
+            tabs.add(tab_color, text="Colors")
+
+            ttk.Label(tab_layout, text="Caption size %").grid(row=0, column=0, sticky="w")
             self.scale_s = ttk.Scale(
-                ctl,
+                tab_layout,
                 from_=40,
                 to=200,
                 orient=tk.HORIZONTAL,
                 variable=self.scale_var,
             )
             self.scale_s.grid(row=0, column=1, sticky="ew", padx=6)
-            self.scale_v = ttk.Label(ctl, width=5)
+            self.scale_v = ttk.Label(tab_layout, width=6)
             self.scale_v.grid(row=0, column=2)
 
-            ttk.Label(ctl, text="From bottom %").grid(row=1, column=0, sticky="w", pady=(6, 0))
+            ttk.Label(tab_layout, text="From bottom %").grid(
+                row=1, column=0, sticky="w", pady=(6, 0)
+            )
             self.bottom_s = ttk.Scale(
-                ctl,
-                from_=5,
-                to=26,
+                tab_layout,
+                from_=0,
+                to=100,
                 orient=tk.HORIZONTAL,
                 variable=self.bottom_var,
             )
             self.bottom_s.grid(row=1, column=1, sticky="ew", padx=6, pady=(6, 0))
-            self.bottom_v = ttk.Label(ctl, width=5)
+            self.bottom_v = ttk.Label(tab_layout, width=6)
             self.bottom_v.grid(row=1, column=2, pady=(6, 0))
 
-            ttk.Label(ctl, text="Boost size %").grid(row=2, column=0, sticky="w", pady=(6, 0))
+            ttk.Label(tab_layout, text="Boost size %").grid(
+                row=2, column=0, sticky="w", pady=(6, 0)
+            )
             self.em_s = ttk.Scale(
-                ctl,
+                tab_layout,
                 from_=100,
                 to=170,
                 orient=tk.HORIZONTAL,
                 variable=self.em_var,
             )
             self.em_s.grid(row=2, column=1, sticky="ew", padx=6, pady=(6, 0))
-            self.em_v = ttk.Label(ctl, width=5)
+            self.em_v = ttk.Label(tab_layout, width=6)
             self.em_v.grid(row=2, column=2, pady=(6, 0))
-            ctl.columnconfigure(1, weight=1)
+            tab_layout.columnconfigure(1, weight=1)
 
-            for v in (self.scale_var, self.bottom_var, self.em_var):
+            ttk.Label(tab_color, text="Subtitle color (#RRGGBB)").grid(
+                row=0, column=0, sticky="w"
+            )
+            ttk.Entry(tab_color, textvariable=self.caption_color_var, width=14).grid(
+                row=0, column=1, sticky="w", padx=(6, 0)
+            )
+            ttk.Button(
+                tab_color, text="Pick…", command=lambda: self._pick_color(self.caption_color_var)
+            ).grid(row=0, column=2, padx=(8, 0))
+
+            ttk.Label(tab_color, text="Karaoke active color (#RRGGBB)").grid(
+                row=1, column=0, sticky="w", pady=(8, 0)
+            )
+            ttk.Entry(tab_color, textvariable=self.karaoke_color_var, width=14).grid(
+                row=1, column=1, sticky="w", padx=(6, 0), pady=(8, 0)
+            )
+            ttk.Button(
+                tab_color, text="Pick…", command=lambda: self._pick_color(self.karaoke_color_var)
+            ).grid(row=1, column=2, padx=(8, 0), pady=(8, 0))
+
+            for v in (
+                self.scale_var,
+                self.bottom_var,
+                self.em_var,
+                self.caption_color_var,
+                self.karaoke_color_var,
+            ):
                 tid = v.trace_add("write", self._on_style_slider_trace)
                 self._style_traces.append((v, tid))
 
-            bot = ttk.Frame(self, padding=8)
+            bot = ttk.Frame(self._scroll_body, padding=8)
             bot.pack(fill=tk.X)
             ttk.Button(bot, text="Save to JSON", command=self.on_save).pack(side=tk.LEFT)
+            ttk.Button(bot, text="Save preset as…", command=self.on_save_preset_as).pack(
+                side=tk.LEFT, padx=(8, 0)
+            )
             ttk.Button(bot, text="Load template preset", command=self.on_load_preset).pack(
+                side=tk.LEFT, padx=(8, 0)
+            )
+            ttk.Button(bot, text="Load preset file…", command=self.on_load_preset_file).pack(
                 side=tk.LEFT, padx=(8, 0)
             )
             ttk.Label(
@@ -1713,6 +1848,10 @@ def run_caption_studio(initial_json: Path | None = None) -> None:
         def _on_close_window(self) -> None:
             self.on_pause()
             self._cancel_land_animation()
+            try:
+                self._scroll_canvas.unbind_all("<MouseWheel>")
+            except tk.TclError:
+                pass
             if self._style_debounce_after is not None:
                 try:
                     self.after_cancel(self._style_debounce_after)
@@ -1725,6 +1864,19 @@ def run_caption_studio(initial_json: Path | None = None) -> None:
                 except tk.TclError:
                     pass
             self.destroy()
+
+        def _on_mousewheel(self, event: Any) -> None:
+            """Scroll studio controls with mouse wheel."""
+            if not hasattr(self, "_scroll_canvas"):
+                return
+            try:
+                delta = int(event.delta)
+            except Exception:
+                delta = 0
+            if delta == 0:
+                return
+            step = -1 if delta > 0 else 1
+            self._scroll_canvas.yview_scroll(step, "units")
 
         def _on_style_slider_trace(self, *_args: Any) -> None:
             """Coalesce redraws: after_idle (default) or STUDIO_STYLE_DEBOUNCE_MS."""
@@ -1798,20 +1950,22 @@ def run_caption_studio(initial_json: Path | None = None) -> None:
             layout = self._compute_preview_layout()
             if layout is None:
                 return
-            cw, ch, segs, y_final = layout
+            cw, ch, segs, y_final, subtitle_rgb, karaoke_rgb = layout
             drop = max(28, min(96, ch // 8))
             steps = STUDIO_ELASTIC_LAND_STEPS
             frame_ms = STUDIO_ELASTIC_FRAME_MS
 
             def tick(step: int) -> None:
                 if step > steps:
-                    self._paint_canvas_from_layout(cw, ch, segs, y_final)
+                    self._paint_canvas_from_layout(
+                        cw, ch, segs, y_final, subtitle_rgb, karaoke_rgb
+                    )
                     return
                 t = step / float(steps)
                 prog = CaptionStudio._ease_out_back(t)
                 # Land from above (smaller y) with overshoot via ease-out-back
                 y = y_final - int((1.0 - prog) * drop)
-                self._paint_canvas_from_layout(cw, ch, segs, y)
+                self._paint_canvas_from_layout(cw, ch, segs, y, subtitle_rgb, karaoke_rgb)
                 nxt = step + 1
                 aid = self.after(frame_ms, lambda s=nxt: tick(s))
                 self._anim_after_ids.append(aid)
@@ -1955,11 +2109,13 @@ def run_caption_studio(initial_json: Path | None = None) -> None:
             self.on_pause()
             self._resolve_cover_path()
             slide = slides[ix]
-            sc, bt, em, el = read_studio_knobs_from_slide3(slide)
+            sc, bt, em, el, sub_col, kar_col = read_studio_knobs_from_slide3(slide)
             self.scale_var.set(sc)
             self.bottom_var.set(bt)
             self.em_var.set(em)
             self._anim_land_var.set(el)
+            self.caption_color_var.set(sub_col)
+            self.karaoke_color_var.set(kar_col)
             self._configure_cue_slider(slide)
             self._update_cue_line_label(slide)
             self.redraw()
@@ -1975,12 +2131,69 @@ def run_caption_studio(initial_json: Path | None = None) -> None:
                 return
             stub: dict[str, Any] = {"slide3symbol": True}
             apply_caption_layout_preset_to_slide3(stub, preset)
-            sc, bt, em, el = read_studio_knobs_from_slide3(stub)
+            sc, bt, em, el, sub_col, kar_col = read_studio_knobs_from_slide3(stub)
             self.scale_var.set(sc)
             self.bottom_var.set(bt)
             self.em_var.set(em)
             self._anim_land_var.set(el)
+            self.caption_color_var.set(sub_col)
+            self.karaoke_color_var.set(kar_col)
             self.redraw()
+
+        def on_load_preset_file(self) -> None:
+            p = filedialog.askopenfilename(
+                title="Load caption preset JSON",
+                initialdir=str(SCRIPT_DIR),
+                filetypes=[("JSON", "*.json"), ("All", "*.*")],
+            )
+            if not p:
+                return
+            preset = load_caption_layout_preset(Path(p))
+            if not preset:
+                messagebox.showerror("Preset", "Invalid preset JSON.")
+                return
+            stub: dict[str, Any] = {"slide3symbol": True}
+            apply_caption_layout_preset_to_slide3(stub, preset)
+            sc, bt, em, el, sub_col, kar_col = read_studio_knobs_from_slide3(stub)
+            self.scale_var.set(sc)
+            self.bottom_var.set(bt)
+            self.em_var.set(em)
+            self._anim_land_var.set(el)
+            self.caption_color_var.set(sub_col)
+            self.karaoke_color_var.set(kar_col)
+            self.redraw()
+
+        def on_save_preset_as(self) -> None:
+            if not self.data or self.slide3_idx < 0:
+                messagebox.showinfo("Save preset", "Load a session JSON first.")
+                return
+            p = filedialog.asksaveasfilename(
+                title="Save caption preset as",
+                initialdir=str(SCRIPT_DIR),
+                defaultextension=".json",
+                filetypes=[("JSON", "*.json"), ("All", "*.*")],
+                initialfile="caption_layout_preset-custom.json",
+            )
+            if not p:
+                return
+            stub: dict[str, Any] = {"slide3symbol": True}
+            apply_studio_knobs_to_slide3(
+                stub,
+                caption_scale_pct=float(self.scale_var.get()),
+                bottom_total_pct=float(self.bottom_var.get()),
+                em_pct=float(self.em_var.get()),
+                caption_color=self.caption_color_var.get(),
+                karaoke_color=self.karaoke_color_var.get(),
+                elastic_land=bool(self._anim_land_var.get()),
+            )
+            try:
+                out = save_caption_layout_preset(
+                    stub, source_session=(self.session_path.name if self.session_path else None), path=Path(p)
+                )
+            except OSError as e:
+                messagebox.showerror("Save preset failed", str(e))
+                return
+            messagebox.showinfo("Preset saved", f"Wrote {out.name}")
 
         def _cue_index_clamped(self, slide: dict) -> int:
             n = len(slide3_cues_list(slide))
@@ -2069,12 +2282,17 @@ def run_caption_studio(initial_json: Path | None = None) -> None:
             self._cancel_land_animation()
             self._redraw_static()
 
+        def _pick_color(self, target_var: Any) -> None:
+            cur = normalize_hex_color(target_var.get()) or "#111111"
+            _rgb, hx = colorchooser.askcolor(color=cur, parent=self)
+            if hx:
+                target_var.set(hx.upper())
+
         def _compute_preview_layout(
             self,
-        ) -> tuple[int, int, list[tuple[str, Any]], int] | None:
+        ) -> tuple[int, int, list[tuple[str, Any, bool]], int, tuple[int, int, int], tuple[int, int, int]] | None:
             """
-            Returns cw, ch, [(text, font), ...] (index.html: boost words + **emph** runs),
-            and y_top for the aligned caption row.
+            Returns cw, ch, [(text, font, is_emph), ...], y_top, subtitle RGB, karaoke RGB.
             """
             if not self.data or self.slide3_idx < 0:
                 return None
@@ -2092,7 +2310,7 @@ def run_caption_studio(initial_json: Path | None = None) -> None:
 
             cw = 400
             ch = max(200, int(round(cw * eh / ew)))
-            margin_px = max(8, int(round(ch * (bottom_pct / 100.0))))
+            margin_px = max(0, int(round(ch * (bottom_pct / 100.0))))
 
             boost = slide.get("slide3CaptionBoostWords")
             raw_preview = re.sub(r"<[^>]+>", "", line or "")
@@ -2106,17 +2324,17 @@ def run_caption_studio(initial_json: Path | None = None) -> None:
             emph_px = max(16, min(int(round(base_px * em)), ch // 2))
             font_reg, font_emph = studio_pair_fonts(base_px, emph_px)
             parts = re.split(r"(\*\*[^*]+\*\*)", t)
-            segs: list[tuple[str, Any]] = []
+            segs: list[tuple[str, Any, bool]] = []
             for p in parts:
                 if not p:
                     continue
                 mm = re.match(r"^\*\*([^*]+)\*\*$", p)
                 if mm:
-                    segs.append((mm.group(1), font_emph))
+                    segs.append((mm.group(1), font_emph, True))
                 else:
-                    segs.append((p, font_reg))
+                    segs.append((p, font_reg, False))
             if not segs:
-                segs = [("Caption preview", font_reg)]
+                segs = [("Caption preview", font_reg, False)]
 
             def _seg_w(ft: Any, tx: str) -> float:
                 if hasattr(ft, "getlength"):
@@ -2128,16 +2346,23 @@ def run_caption_studio(initial_json: Path | None = None) -> None:
                 bb = ft.getbbox(tx)
                 return float(bb[3] - bb[1])
 
-            max_h = max(_seg_h(f, tx) for tx, f in segs)
+            max_h = max(_seg_h(f, tx) for tx, f, _is_em in segs)
             y_top = ch - margin_px - int(max_h)
-            return (cw, ch, segs, y_top)
+            y_top = max(0, min(ch - int(max_h), y_top))
+            sub_hex = normalize_hex_color(self.caption_color_var.get()) or "#111111"
+            kar_hex = normalize_hex_color(self.karaoke_color_var.get()) or "#111111"
+            sub_rgb = tuple(int(sub_hex[i : i + 2], 16) for i in (1, 3, 5))
+            kar_rgb = tuple(int(kar_hex[i : i + 2], 16) for i in (1, 3, 5))
+            return (cw, ch, segs, y_top, sub_rgb, kar_rgb)
 
         def _paint_canvas_from_layout(
             self,
             cw: int,
             ch: int,
-            segs: list[tuple[str, Any]],
+            segs: list[tuple[str, Any, bool]],
             y_top: int,
+            subtitle_rgb: tuple[int, int, int],
+            karaoke_rgb: tuple[int, int, int],
         ) -> None:
             self.canvas.configure(width=cw, height=ch)
             img = self._compose_base_image(cw, ch).copy()
@@ -2153,15 +2378,15 @@ def run_caption_studio(initial_json: Path | None = None) -> None:
                 bb = ft.getbbox(tx)
                 return float(bb[2] - bb[0])
 
-            max_h = max(_seg_h(f, tx) for tx, f in segs)
-            total_w = sum(_seg_w(f, tx) for tx, f in segs)
+            max_h = max(_seg_h(f, tx) for tx, f, _is_em in segs)
+            total_w = sum(_seg_w(f, tx) for tx, f, _is_em in segs)
             cursor = (cw - int(total_w)) // 2
-            fill = (17, 17, 17)
             outline = (255, 255, 255)
-            for tx, font in segs:
+            for tx, font, is_em in segs:
                 h = _seg_h(font, tx)
                 dy = int(max_h - h)
                 x, y = cursor, y_top + dy
+                fill = karaoke_rgb if is_em else subtitle_rgb
                 for ox, oy in (
                     (-1, -1),
                     (1, -1),
@@ -2187,8 +2412,8 @@ def run_caption_studio(initial_json: Path | None = None) -> None:
             layout = self._compute_preview_layout()
             if layout is None:
                 return
-            cw, ch, segs, y_top = layout
-            self._paint_canvas_from_layout(cw, ch, segs, y_top)
+            cw, ch, segs, y_top, subtitle_rgb, karaoke_rgb = layout
+            self._paint_canvas_from_layout(cw, ch, segs, y_top, subtitle_rgb, karaoke_rgb)
 
         def _compose_base_image(self, cw: int, ch: int) -> Any:
             """Resize cover to preview size (cached), or light gray placeholder."""
@@ -2247,6 +2472,8 @@ def run_caption_studio(initial_json: Path | None = None) -> None:
                 caption_scale_pct=float(self.scale_var.get()),
                 bottom_total_pct=float(self.bottom_var.get()),
                 em_pct=float(self.em_var.get()),
+                caption_color=self.caption_color_var.get(),
+                karaoke_color=self.karaoke_color_var.get(),
                 elastic_land=bool(self._anim_land_var.get()),
             )
             try:
@@ -2257,13 +2484,28 @@ def run_caption_studio(initial_json: Path | None = None) -> None:
                 preset_path = save_caption_layout_preset(
                     slide, source_session=self.session_path.name
                 )
+                carried_cover = False
+                if (
+                    self._carry_cover_var.get()
+                    and self.cover_path
+                    and self.cover_path.is_file()
+                ):
+                    dst = self.session_path.parent / COVER_NAME
+                    if self.cover_path.resolve() != dst.resolve():
+                        shutil.copy2(self.cover_path, dst)
+                    carried_cover = True
             except OSError as e:
                 messagebox.showerror("Save failed", str(e))
                 return
             messagebox.showinfo(
                 "Saved",
                 f"Wrote {self.session_path.name}\n"
-                f"Template defaults: {preset_path.name} (batch uses this automatically).",
+                f"Template defaults: {preset_path.name} (batch uses this automatically)."
+                + (
+                    f"\nCover: copied to {COVER_NAME} for local render folder."
+                    if carried_cover
+                    else ""
+                ),
             )
 
     app = CaptionStudio()
