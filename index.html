@@ -74,6 +74,24 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
 .canvas-area::before{content:'';position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(rgba(200,144,90,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(200,144,90,.025) 1px,transparent 1px);background-size:36px 36px;}
 .canvas-area.h-mode{overflow-x:auto;overflow-y:hidden;justify-content:flex-start;align-items:center;flex-wrap:nowrap;}
 .canvas-area.v-mode{overflow-y:auto;overflow-x:hidden;justify-content:center;align-items:flex-start;flex-wrap:wrap;}
+.rp-variant-strip{flex-shrink:0;border-bottom:1px solid var(--border);background:var(--dark2);padding:8px 11px 10px;display:flex;flex-direction:column;gap:6px;}
+.rp-v-btn{width:100%;box-sizing:border-box;text-align:center;}
+.rp-variant-row-active{display:none;flex-direction:column;gap:6px;align-items:stretch;}
+.rp-variant-row-active.show{display:flex;}
+.rp-variant-top{display:flex;align-items:center;flex-wrap:wrap;gap:6px;justify-content:space-between;width:100%;}
+.rp-variant-tools{display:none;flex-wrap:wrap;align-items:center;gap:8px;font-size:9px;color:var(--sand);}
+.rp-variant-row-active.show .rp-variant-tools{display:flex;}
+.rp-variant-tools label{cursor:pointer;display:flex;align-items:center;gap:4px;}
+.variant-row-fields{display:none;width:100%;max-height:200px;overflow:auto;border:1px solid var(--border2);border-radius:6px;padding:6px;background:var(--panel);}
+.variant-row-fields.show{display:block;}
+.vr-field{margin-bottom:6px;}
+.vr-field label{display:block;font-size:8px;color:var(--muted);margin-bottom:2px;}
+.vr-field input{width:100%;box-sizing:border-box;font-size:9px;padding:4px 6px;border:1px solid var(--border2);border-radius:4px;background:var(--dark);color:var(--text);font-family:inherit;}
+.variant-pill{display:none;align-items:center;gap:4px;background:var(--panel);border:1px solid var(--border2);border-radius:999px;padding:2px 8px;font-size:9px;color:var(--sand);font-variant-numeric:tabular-nums;flex:1;min-width:0;justify-content:center;}
+.variant-pill.on{display:inline-flex;}
+.variant-pill button{background:transparent;border:0;color:var(--sand);cursor:pointer;padding:2px 6px;font-size:11px;line-height:1;border-radius:4px;font-family:inherit;}
+.variant-pill button:hover{background:var(--sand2);color:var(--text);}
+.variant-pill .vp-lbl{min-width:0;flex:1;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .slides-strip{display:flex;gap:14px;align-items:flex-end;position:relative;z-index:1;}
 .h-mode .slides-strip{flex-wrap:nowrap;padding:0 16px;}
 .v-mode .slides-strip{flex-wrap:wrap;justify-content:center;padding:16px;}
@@ -121,6 +139,12 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
 .slide3-media audio,.slide-media-strip audio{max-width:100%;}
 .slide3-cap.smed-rich{white-space:pre-wrap;}
 .slide3-cap .smed-em{line-height:1.25;display:inline;}
+.slide3-cap.smed-karaoke{font-weight:400;}
+/* Word-by-word: inactive = muted gray; active word = full colour + heavy (matches GIF / vertical cuts). */
+.slide3-cap.smed-karaoke .smed-rest{color:rgba(26,23,20,.42);font-weight:500;}
+.slide3-cap.smed-karaoke .smed-em.smed-kar{color:#111;font-weight:800;}
+.smed-dark .slide3-cap.smed-karaoke .smed-rest{color:rgba(255,255,255,.48);font-weight:500;}
+.smed-dark .slide3-cap.smed-karaoke .smed-em.smed-kar{color:rgba(255,255,255,.98);font-weight:800;}
 .slide-media-strip.smed-col{flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;}
 .rp-media-dock .slide-media-ui{margin-top:4px;width:100%;max-width:100%;box-sizing:border-box;}
 .smed-col .slide-media-ui{margin-top:0;width:100%;max-width:100%;box-sizing:border-box;}
@@ -162,8 +186,16 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
 .fl{font-size:8px;font-weight:600;color:var(--muted);margin:5px 0 2px;}
 input.fi,textarea.fi,select.fi{width:100%;padding:4px 6px;background:var(--dark2);border:1px solid var(--border2);border-radius:3px;font-size:10px;font-family:'Alliance',sans-serif;color:var(--text);outline:none;}
 input.fi:focus,textarea.fi:focus,select.fi:focus{border-color:var(--sand);}
-textarea.fi{height:50px;resize:none;line-height:1.5;}
+textarea.fi{min-height:50px;height:auto;resize:vertical;line-height:1.5;max-height:38vh;}
+textarea.fi.fi-para{min-height:92px;max-height:44vh;font-size:10.5px;line-height:1.55;}
+body.para-editor-tall textarea.fi.fi-para{min-height:min(52vh,460px);max-height:min(78vh,720px);}
 select.fi option{background:var(--dark2);}
+.map-table{width:100%;border-collapse:collapse;font-size:9px;color:var(--text);}
+.map-table th,.map-table td{border:1px solid var(--border2);padding:5px 6px;text-align:left;vertical-align:top;}
+.map-table th{background:var(--dark2);color:var(--sand);font-weight:600;}
+.map-table code{font-size:8px;color:var(--sand2);}
+.modal.modal-wide{width:min(760px,96vw);max-width:96vw;}
+.map-scroll{overflow:auto;max-height:min(68vh,560px);padding:10px 12px;}
 .tog-row{display:flex;align-items:center;justify-content:space-between;margin:4px 0 2px;}
 .tog-lbl{font-size:9px;color:var(--text);font-weight:400;}
 .tog{width:28px;height:15px;border-radius:8px;background:var(--border2);position:relative;cursor:pointer;transition:background .18s;flex-shrink:0;}
@@ -208,6 +240,17 @@ input[type=range]{width:100%;margin:2px 0;accent-color:var(--sand);}
 </head>
 <body>
 <div class="exp-ov" id="expOv"><p id="expMsg">Preparing...</p><div class="ep"><div class="eb" id="expBar" style="width:0%"></div></div></div>
+<div class="modal-bd" id="mapModal" onclick="if(event.target===this)closeMappingHud()">
+  <div class="modal modal-wide" onclick="event.stopPropagation()">
+    <div class="modal-hd"><h3>Variants CSV → slides</h3><button type="button" onclick="closeMappingHud()">✕</button></div>
+    <div class="map-scroll">
+      <p class="note" style="margin:0 0 10px">Header row keys are <strong>case-insensitive</strong>. Use one row per symbol. <code>slide5_title</code> fills the <strong>explainer body</strong> (<code>para</code>), not a title field — naming is historical.</p>
+      <table class="map-table" id="mapTable"></table>
+      <p class="note" style="margin-top:10px">Optional image columns: <code>coverImage</code>, <code>symbolImage</code>, <code>slide4image</code> (paths under <code>covers/</code> or URLs). Python batch also reads <code>srt</code> / <code>boostWords</code> / <code>emPct</code> like the app.</p>
+    </div>
+    <div class="modal-ft"><button type="button" class="conf" onclick="closeMappingHud()">Close</button></div>
+  </div>
+</div>
 <div class="modal-bd" id="roModal">
   <div class="modal">
     <div class="modal-hd"><h3>Reorder Slides</h3><button onclick="closeRo()">✕</button></div>
@@ -249,6 +292,9 @@ input[type=range]{width:100%;margin:2px 0;accent-color:var(--sand);}
       <button class="s-btn p" onclick="saveSession()">Save ↓</button>
       <button class="s-btn" onclick="document.getElementById('jsonIn').click()">Load JSON</button>
       <input type="file" id="jsonIn" accept=".json" style="display:none" onchange="loadSessionFile(event)">
+      <button class="s-btn" onclick="document.getElementById('deltaIn').click()">Load Delta</button>
+      <input type="file" id="deltaIn" accept=".json" style="display:none" onchange="loadDeltaFile(event)">
+      <button class="s-btn" onclick="exportDelta()">Export Delta</button>
       <div id="sessSlots" style="display:flex;gap:3px;flex-wrap:wrap;"></div>
     </div>
     <div class="canvas-area v-mode" id="canvasArea">
@@ -256,6 +302,26 @@ input[type=range]{width:100%;margin:2px 0;accent-color:var(--sand);}
     </div>
   </div>
   <div class="right-panel">
+    <div class="rp-variant-strip" id="rpVariantStrip">
+      <button class="s-btn rp-v-btn" type="button" onclick="document.getElementById('variantsCsvIn').click()" title="Text columns always apply. Optional columns coverImage, symbolImage, slide4image — if empty, images stay from your loaded JSON.">Load Variants CSV</button>
+      <button class="s-btn rp-v-btn" type="button" onclick="openMappingHud()" title="Which CSV column maps to which slide field">CSV map…</button>
+      <input type="file" id="variantsCsvIn" accept=".csv,text/csv" style="display:none" onchange="loadVariantsCsv(event)">
+      <div class="rp-variant-row-active" id="rpVariantActive">
+        <div class="rp-variant-top">
+          <span class="variant-pill" id="variantPill" aria-label="Variant navigator">
+            <button type="button" onclick="variantNavPrev()" title="Previous variant">◀</button>
+            <span class="vp-lbl" id="variantPillLbl">—</span>
+            <button type="button" onclick="variantNavNext()" title="Next variant">▶</button>
+          </span>
+          <button class="s-btn" type="button" id="variantExitBtn" onclick="exitVariants()">✕ Exit</button>
+        </div>
+        <div class="rp-variant-tools" id="rpVariantTools">
+          <label title="Edit CSV cells for the current row; preview updates after a short pause"><input type="checkbox" id="variantLiveEditToggle" onchange="setVariantLiveEdit(this.checked)"> Live-edit row</label>
+          <button type="button" class="s-btn" style="font-size:9px;padding:4px 10px" onclick="saveVariantsCsv()" title="Write all rows back to CSV (pick file to overwrite, or download)">Save CSV</button>
+        </div>
+        <div class="variant-row-fields" id="variantRowFields"></div>
+      </div>
+    </div>
     <div class="rp-hd">
       <span class="rp-ttl" id="rpTitle">Editor</span>
       <div class="rp-acts">
@@ -315,6 +381,344 @@ let slides=[
 // ── PAN GROUP 1: Duafe wide photo
 let panGroups={1:{panSubText:'children of the heavens',panImgZoom:100,panImgX:0,panSplit:2,panHeroScale:100,panHeroFont:'alliance900',imageDataUrl:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MDAiIGhlaWdodD0iNDAwIiB2aWV3Qm94PSIwIDAgODAwIDQwMCI+CiAgPHJlY3Qgd2lkdGg9IjgwMCIgaGVpZ2h0PSI0MDAiIGZpbGw9IiMyQTJBMkEiLz4KICA8bGluZSB4MT0iMCIgeTE9IjAiIHgyPSI4MDAiIHkyPSI0MDAiIHN0cm9rZT0iIzU1NSIgc3Ryb2tlLXdpZHRoPSIxLjUiLz4KICA8bGluZSB4MT0iODAwIiB5MT0iMCIgeDI9IjAiIHkyPSI0MDAiIHN0cm9rZT0iIzU1NSIgc3Ryb2tlLXdpZHRoPSIxLjUiLz4KICA8dGV4dCB4PSI0MDAiIHk9IjIwNiIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTgiIGZpbGw9IiM1NTUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPldpZGUgcGhvdG8gaGVyZTwvdGV4dD4KPC9zdmc+',panText:'Duafe',dimAmount:0,panImgY:0,showAuthor:false,authorName:'Beiza',authorSub:'beizaplus.com',showMascot:true,slideIds:[0,1]}};
 let pgCtr=1;
+/** Optional deck metadata / voiceover reels (round-trip in full JSON + delta files). */
+let deckMeta=null;
+let deckVoiceover=null;
+/** Variants CSV: browse text rows; frozen base session restored on exit. */
+let variantRows=[],variantIdx=0,variantBaseSession=null;
+let variantCsvHeadersRaw=[],variantLastFileName='variants.csv',variantLiveEdit=false,variantEditDebounce=null;
+function parseCsvText(text){
+  const rows=[];let i=0,field='',row=[],inQ=false;
+  const s=String(text||'').replace(/\r\n/g,'\n').replace(/\r/g,'\n');
+  while(i<s.length){
+    const c=s[i];
+    if(inQ){
+      if(c==='"'){if(s[i+1]==='"'){field+='"';i+=2;continue;}inQ=false;i++;continue;}
+      field+=c;i++;continue;
+    }
+    if(c==='"'){inQ=true;i++;continue;}
+    if(c===','){row.push(field);field='';i++;continue;}
+    if(c==='\n'){row.push(field);rows.push(row);row=[];field='';i++;continue;}
+    field+=c;i++;
+  }
+  row.push(field);
+  if(row.length>1||String(field).trim()!=='')rows.push(row);
+  return rows;
+}
+function csvRowsToObjects(rows){
+  if(!rows||rows.length<2)return[];
+  const hdr=rows[0].map(function(h){return String(h||'').trim().replace(/^\uFEFF/,'').toLowerCase();});
+  const out=[];
+  for(let r=1;r<rows.length;r++){
+    const line=rows[r],o={};
+    for(let c=0;c<hdr.length;c++)o[hdr[c]]=line[c]!=null?line[c]:'';
+    out.push(o);
+  }
+  return out;
+}
+/**
+ * Variants CSV → delta (titles, pan copy, captions, boost, meta). Slide targets come from base session flags
+ * (slide4photo, slide5symbol, counter content slide), not hardcoded indices only.
+ * Optional image columns are **not** in the delta; see applyVariantRowImages — if a row omits
+ * image links, nothing is fetched and pan/slide images stay from the loaded session (duafe.json).
+ */
+function variantsCsvRowToDelta(row,baseSession){
+  const get=function(k){return(row&&row[k]!=null)?String(row[k]):'';};
+  const slides={},panGroups={};
+  const baseSlides=(baseSession&&baseSession.slides)?baseSession.slides:[];
+  function findSlide5ExplainerIx(){
+    var ix=baseSlides.findIndex(function(s){return s&&s.slide5symbol;});
+    return ix>=0?ix:4;
+  }
+  function findCounterContentIx(){
+    var ix=baseSlides.findIndex(function(s){
+      return s&&s.type==='content'&&s.showCounter!==false&&s.slide3symbol!==true&&s.slide4photo===undefined&&s.slide5symbol!==true;
+    });
+    return ix>=0?ix:5;
+  }
+  const t2=get('slide3_title').replace(/^\s+|\s+$/g,'');
+  const hw2=get('slide3_hw').replace(/^\s+|\s+$/g,'');
+  const t3=get('slide4_title').replace(/^\s+|\s+$/g,'');
+  var photoCaption=(get('slide4_para')||get('photo_para')||'').replace(/^\s+|\s+$/g,'');
+  const explainerExplicit=(get('explainer_para')||get('slide5_para')||get('slide5_body')||'').replace(/^\s+|\s+$/g,'');
+  var legacyT5=get('slide5_title').replace(/^\s+|\s+$/g,'');
+  var counterTitle=(get('counter_title')||get('counter_name')||'').replace(/^\s+|\s+$/g,'');
+  var explainerBody=explainerExplicit;
+  var didAutoSplit=false;
+  if(!counterTitle&&legacyT5&&photoCaption&&!explainerExplicit&&legacyT5.length<=40&&photoCaption.length>=Math.max(35,legacyT5.length*3)){
+    counterTitle=legacyT5;
+    explainerBody=photoCaption;
+    photoCaption='';
+    didAutoSplit=true;
+  }
+  if(!explainerBody&&!didAutoSplit&&legacyT5&&!counterTitle){
+    explainerBody=legacyT5;
+  }
+  if(t2)slides['2']={title:t2};
+  if(hw2)slides['2']=Object.assign({},slides['2']||{},{hw:hw2});
+  if(t3)slides['3']=Object.assign({},slides['3']||{},{title:t3});
+  if(photoCaption){
+    slides['3']=Object.assign({},slides['3']||{},{para:photoCaption,showPara:true});
+  }
+  if(explainerBody){
+    var ixExpl=findSlide5ExplainerIx();
+    slides[String(ixExpl)]=Object.assign({},slides[String(ixExpl)]||{},{para:explainerBody,showPara:true});
+  }
+  if(counterTitle){
+    var ixCntTitle=findCounterContentIx();
+    slides[String(ixCntTitle)]=Object.assign({},slides[String(ixCntTitle)]||{},{title:counterTitle});
+  }
+  const pt=get('pantext'),pst=get('pansubtext');
+  if(pt||pst){
+    panGroups['1']={};
+    if(pt)panGroups['1'].panText=pt;
+    if(pst)panGroups['1'].panSubText=pst;
+  }
+  const boost=get('boostwords').replace(/^\s+|\s+$/g,'');
+  if(boost){
+    slides['2']=Object.assign({},slides['2']||{},{slide3CaptionBoostWords:boost});
+    var ixCnt=baseSlides.findIndex(function(s){
+      return s&&s.type==='content'&&s.showCounter!==false&&s.slide3symbol!==true&&s.slide4photo===undefined&&s.slide5symbol!==true;
+    });
+    if(ixCnt<0)ixCnt=5;
+    slides[String(ixCnt)]=Object.assign({},slides[String(ixCnt)]||{},{cntCaptionBoostWords:boost});
+  }
+  const srtRaw=get('srt').replace(/\\n/g,'\n');
+  const emStr=get('empct').replace(/^\s+|\s+$/g,'');
+  var emNum=null;
+  if(emStr){
+    var en=parseFloat(emStr.replace(',','.'));
+    if(!isNaN(en))emNum=en;
+  }
+  const hasCap=!!(srtRaw.trim()||boost||emNum!=null);
+  if(hasCap){
+    slides['2']=Object.assign({},slides['2']||{},{slide3ShowMedia:true});
+    if(emNum!=null)slides['2'].slide3CaptionEmPct=emNum;
+    if(srtRaw.trim())slides['2'].slide3Srt=srtRaw;
+  }
+  const delta={deltaSchemaVersion:1};
+  if(Object.keys(slides).length)delta.slides=slides;
+  if(Object.keys(panGroups).length)delta.panGroups=panGroups;
+  const sym=get('symbolname').replace(/^\s+|\s+$/g,''),cn=get('carouselnum').replace(/^\s+|\s+$/g,''),vos=get('voiceover_script').replace(/^\s+|\s+$/g,'');
+  if(sym||cn||vos)delta._meta={symbolName:sym,carouselNum:cn,voiceoverScript:vos};
+  return delta;
+}
+function variantRowStr(row,key){
+  return row&&row[key]!=null?String(row[key]).trim():'';
+}
+function variantFirstPanGroupId(sess){
+  const ids=Object.keys(sess.panGroups||{}).map(function(x){return parseInt(x,10);}).filter(function(n){return!isNaN(n);});
+  return ids.length?String(Math.min.apply(null,ids)):'1';
+}
+/** Resolve CSV cell to same-origin URL (covers/… by default). http(s) and data: pass through. */
+function resolveVariantAssetRef(raw){
+  const s=String(raw||'').trim();
+  if(!s)return '';
+  if(/^https?:\/\//i.test(s))return s;
+  if(/^data:/i.test(s))return s;
+  const t=s.replace(/^\.\//,'');
+  if(/^covers\//i.test(t)||/^assets\//i.test(t))return t;
+  if(/\//.test(t))return t;
+  return 'covers/'+t;
+}
+function fetchVariantImageDataUrl(ref){
+  const url=resolveVariantAssetRef(ref);
+  if(!url)return Promise.resolve(null);
+  return fetch(url).then(function(r){
+    if(!r.ok)throw new Error('bad status');
+    return r.blob();
+  }).then(function(blob){
+    return new Promise(function(res,rej){
+      const fr=new FileReader();
+      fr.onload=function(){res(fr.result);};
+      fr.onerror=rej;
+      fr.readAsDataURL(blob);
+    });
+  }).catch(function(){return null;});
+}
+/**
+ * If the CSV row includes image link(s), load them onto merged state; if a cell is empty, skip
+ * (merged already carries images from deepClone(variantBaseSession) / duafe).
+ */
+function applyVariantRowImages(row,merged){
+  const cover=variantRowStr(row,'coverimage');
+  const sym=variantRowStr(row,'symbolimage');
+  const ph=variantRowStr(row,'slide4image');
+  const tasks=[];
+  const pid=variantFirstPanGroupId(merged);
+  if(cover){
+    tasks.push(fetchVariantImageDataUrl(cover).then(function(d){
+      if(d&&merged.panGroups&&merged.panGroups[pid])merged.panGroups[pid].imageDataUrl=d;
+    }));
+  }
+  if(sym){
+    const ix=merged.slides.findIndex(function(s){return s.slide3symbol;});
+    if(ix>=0){
+      tasks.push(fetchVariantImageDataUrl(sym).then(function(d){
+        if(d)merged.slides[ix].symbolImage=d;
+      }));
+    }
+  }
+  if(ph){
+    const i4=merged.slides.findIndex(function(s){return s.slide4photo!==undefined;});
+    if(i4>=0){
+      tasks.push(fetchVariantImageDataUrl(ph).then(function(d){
+        if(d)merged.slides[i4].slide4photo=d;
+      }));
+    }
+  }
+  return tasks.length?Promise.all(tasks):Promise.resolve();
+}
+function variantModeActive(){return variantRows.length>0;}
+function setVariantChromeVisible(on){
+  const act=document.getElementById('rpVariantActive');
+  if(act)act.classList.toggle('show',!!on);
+  const pill=document.getElementById('variantPill');
+  if(pill){if(on)pill.classList.add('on');else pill.classList.remove('on');}
+}
+function updateVariantPillUI(){
+  const lbl=document.getElementById('variantPillLbl');
+  if(!lbl||!variantRows.length)return;
+  const row=variantRows[variantIdx]||{};
+  const sym=(row.symbolname||'').trim()||'—';
+  lbl.textContent=sym+' '+(variantIdx+1)+'/'+variantRows.length;
+}
+function loadVariantsCsv(e){
+  const f=e.target.files[0];
+  if(!f)return;
+  const r=new FileReader();
+  r.onload=function(ev){
+    try{
+      const rows=parseCsvText(ev.target.result);
+      const objs=csvRowsToObjects(rows);
+      if(!objs.length){alert('CSV has no data rows (need a header row + at least one row).');e.target.value='';return;}
+      variantCsvHeadersRaw=rows[0]?rows[0].map(function(h){return String(h||'').trim().replace(/^\uFEFF/,'');}):[];
+      variantLastFileName=f.name||'variants.csv';
+      variantBaseSession=deepClone(getState());
+      variantRows=objs;
+      variantIdx=0;
+      setVariantLiveEdit(false);
+      setVariantChromeVisible(true);
+      applyVariantIndex(0);
+    }catch(err){alert('CSV error: '+(err&&err.message?err.message:String(err)));}
+    e.target.value='';
+  };
+  r.readAsText(f);
+}
+function applyVariantIndex(idx,fromRowEditor){
+  if(!variantBaseSession||!variantRows.length)return;
+  const n=variantRows.length;
+  const i=((idx%n)+n)%n;
+  variantIdx=i;
+  const row=variantRows[i];
+  const merged=applyDelta(variantsCsvRowToDelta(row,variantBaseSession),deepClone(variantBaseSession));
+  applyVariantRowImages(row,merged).then(function(){
+    setState(merged);
+    updateVariantPillUI();
+    if(variantLiveEdit&&!fromRowEditor)renderVariantRowEditor();
+  });
+}
+function setVariantLiveEdit(on){
+  variantLiveEdit=!!on;
+  var t=document.getElementById('variantLiveEditToggle');
+  if(t)t.checked=variantLiveEdit;
+  var wrap=document.getElementById('variantRowFields');
+  if(wrap){
+    if(variantLiveEdit){wrap.classList.add('show');renderVariantRowEditor();}
+    else{wrap.classList.remove('show');wrap.innerHTML='';}
+  }
+}
+function renderVariantRowEditor(){
+  var wrap=document.getElementById('variantRowFields');
+  if(!wrap||!variantLiveEdit||!variantRows.length)return;
+  wrap.innerHTML='';
+  var row=variantRows[variantIdx]||{};
+  var headersLower=variantCsvHeadersRaw.length?variantCsvHeadersRaw.map(function(h){return String(h||'').trim().replace(/^\uFEFF/,'').toLowerCase();}):Object.keys(row);
+  var labels=variantCsvHeadersRaw.length?variantCsvHeadersRaw:headersLower;
+  headersLower.forEach(function(key,idx){
+    var lab=labels[idx]||key;
+    var div=document.createElement('div');
+    div.className='vr-field';
+    var l=document.createElement('label');
+    l.textContent=lab;
+    var inp=document.createElement('input');
+    inp.type='text';
+    inp.dataset.vrk=key;
+    inp.value=row[key]!=null?String(row[key]):'';
+    inp.addEventListener('input',variantRowFieldInput);
+    div.appendChild(l);
+    div.appendChild(inp);
+    wrap.appendChild(div);
+  });
+}
+function variantRowFieldInput(ev){
+  var inp=ev.target;
+  var key=inp.dataset.vrk;
+  if(!key||variantRows[variantIdx]==null)return;
+  variantRows[variantIdx][key]=inp.value;
+  if(variantEditDebounce)clearTimeout(variantEditDebounce);
+  variantEditDebounce=setTimeout(function(){
+    variantEditDebounce=null;
+    applyVariantIndex(variantIdx,true);
+  },250);
+}
+function escCsvField(s){
+  var t=String(s!=null?s:'');
+  if(/[",\n\r]/.test(t))return '"'+t.replace(/"/g,'""')+'"';
+  return t;
+}
+function serializeVariantsCsv(){
+  var headers=variantCsvHeadersRaw.length?variantCsvHeadersRaw:Object.keys(variantRows[0]||{});
+  if(!headers.length)return '';
+  var lines=[headers.map(escCsvField).join(',')];
+  for(var r=0;r<variantRows.length;r++){
+    var row=variantRows[r]||{};
+    lines.push(headers.map(function(h){
+      var k=String(h||'').trim().replace(/^\uFEFF/,'').toLowerCase();
+      return escCsvField(row[k]!=null?row[k]:'');
+    }).join(','));
+  }
+  return lines.join('\n');
+}
+function saveVariantsCsv(){
+  if(!variantRows.length){alert('No variants loaded.');return;}
+  var text=serializeVariantsCsv();
+  if(!text){alert('Nothing to save.');return;}
+  if(window.showSaveFilePicker){
+    window.showSaveFilePicker({suggestedName:variantLastFileName||'variants.csv',types:[{description:'CSV',accept:{'text/csv':['.csv']}}]}).then(function(h){
+      return h.createWritable();
+    }).then(function(w){
+      return w.write(text).then(function(){return w.close();});
+    }).catch(function(err){if(err&&err.name!=='AbortError')alert(String(err));});
+    return;
+  }
+  var blob=new Blob([text],{type:'text/csv;charset=utf-8'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=variantLastFileName||'variants.csv';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+function variantNavPrev(){if(!variantModeActive())return;applyVariantIndex(variantIdx-1);}
+function variantNavNext(){if(!variantModeActive())return;applyVariantIndex(variantIdx+1);}
+function exitVariants(){
+  variantRows=[];
+  variantIdx=0;
+  variantCsvHeadersRaw=[];
+  setVariantLiveEdit(false);
+  setVariantChromeVisible(false);
+  if(variantBaseSession){
+    setState(deepClone(variantBaseSession));
+    variantBaseSession=null;
+  }
+}
+document.addEventListener('keydown',function(ev){
+  if(!variantModeActive())return;
+  const t=ev.target;
+  if(t&&(t.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/i.test(t.tagName)))return;
+  if(ev.key==='ArrowLeft'){ev.preventDefault();variantNavPrev();}
+  else if(ev.key==='ArrowRight'){ev.preventDefault();variantNavNext();}
+});
 function esc(s){return(s||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 function escHtml(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function parseSrtMs(t){
@@ -376,16 +780,44 @@ function captionAccentColor(s){
   const c=TC[s.theme]||TC.cream;
   return outroTagPillBgResolve(s,c);
 }
-/** Wrap **double asterisks** in captions for larger emphatic words (size = caption × emphasis %). Optional accentHex matches tagline pill color. */
-function formatCaptionRich(raw,emScalePct,boostCsv,accentHex){
+/** Wrap **double asterisks** in captions for larger emphatic words (size = caption × emphasis %). On light captions, emphasis stays black (final-video look). */
+function formatCaptionRich(raw,emScalePct,boostCsv,accentHex,captionLight){
   let t=applyCaptionBoostWords(String(raw||''),boostCsv);
   const em=Math.max(1,(emScalePct!=null?emScalePct:130)/100);
   const esc=function(x){return String(x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');};
-  const col=(accentHex&&/^#[0-9A-Fa-f]{6}$/.test(String(accentHex)))?';color:'+accentHex:'';
+  const useGold=captionLight!==true&&accentHex&&/^#[0-9A-Fa-f]{6}$/.test(String(accentHex));
+  const col=useGold?';color:'+accentHex:'';
   return t.split(/(\*\*[^*]+\*\*)/g).map(function(part){
     const mm=part.match(/^\*\*([^*]+)\*\*$/);
     if(mm)return '<span class="smed-em" style="font-size:'+em+'em;font-weight:800'+col+'">'+esc(mm[1])+'</span>';
     return esc(part).replace(/\n/g,'<br>');
+  }).join('');
+}
+/**
+ * Karaoke-style: one active word at a time (proportional to time in cue) — sustains attention.
+ * Runs after applyCaptionBoostWords so **boost** chunks count as single words (same as ASS export).
+ */
+function formatCaptionKaraoke(raw,cueStart,cueEnd,ms,emScalePct,boostCsv,captionLight,accentHex){
+  const em=Math.max(1,(emScalePct!=null?emScalePct:130)/100);
+  const esc=function(x){return String(x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');};
+  const marked=applyCaptionBoostWords(String(raw||'').replace(/<[^>]+>/g,''),boostCsv);
+  const parts=marked.match(/\*\*[^*]+\*\*|\S+|\s+/g)||[];
+  const wordIdx=[];
+  for(let i=0;i<parts.length;i++) if(/\S/.test(parts[i])) wordIdx.push(i);
+  const n=wordIdx.length;
+  const dur=Math.max(1,cueEnd-cueStart);
+  const tt=Math.min(Math.max(0,ms-cueStart),dur);
+  const activeOrdinal=n>0?Math.min(n-1,Math.floor((tt/dur)*n)):0;
+  const activePartIndex=n>0?wordIdx[activeOrdinal]:-1;
+  const useGold=captionLight!==true&&accentHex&&/^#[0-9A-Fa-f]{6}$/.test(String(accentHex));
+  const emCol=useGold?';color:'+accentHex:'';
+  return parts.map(function(chunk,pi){
+    if(!/\S/.test(chunk))return esc(chunk);
+    const mm=chunk.match(/^\*\*([^*]+)\*\*$/);
+    const inner=mm?mm[1]:chunk;
+    const isAct=(pi===activePartIndex);
+    if(isAct)return '<span class="smed-em smed-kar" style="font-size:'+em+'em;font-weight:800'+emCol+'">'+esc(inner)+'</span>';
+    return '<span class="smed-rest">'+esc(inner)+'</span>';
   }).join('');
 }
 function getSlideMedia(s){
@@ -396,12 +828,12 @@ function getSlideMedia(s){
     let nudge=s.slide3CaptionNudgePct;
     if(nudge==null||nudge===undefined)nudge=6;
     const bot=Math.min(30,Math.max(0.5,tB+nudge));
-    return{audio:s.slide3AudioData,srt:s.slide3Srt,srtCues:cues,bottom:bot,captionLight:true,captionAlignLikeTitle:true,captionScale:s.slide3CaptionScale!=null?s.slide3CaptionScale:100,captionEmPct:s.slide3CaptionEmPct!=null?s.slide3CaptionEmPct:130,captionBoostCsv:s.slide3CaptionBoostWords};
+    return{audio:s.slide3AudioData,srt:s.slide3Srt,srtCues:cues,bottom:bot,captionLight:true,captionAlignLikeTitle:true,captionScale:s.slide3CaptionScale!=null?s.slide3CaptionScale:100,captionEmPct:s.slide3CaptionEmPct!=null?s.slide3CaptionEmPct:130,captionBoostCsv:s.slide3CaptionBoostWords,captionElasticLand:s.slide3CaptionElasticLand===true};
   }
   if(isCounterContentSlide(s)){
     if(s.cntMediaShow!==true)return null;
     const cues=s.cntMediaSrtCues&&s.cntMediaSrtCues.length?s.cntMediaSrtCues:parseSrtToCues(s.cntMediaSrt);
-    return{audio:s.cntMediaAudio,srt:s.cntMediaSrt,srtCues:cues,bottom:s.cntMediaBottomPct!=null?s.cntMediaBottomPct:4,captionLight:s.counterTextWhite===false,captionAlignLikeTitle:false,captionScale:s.cntCaptionScale!=null?s.cntCaptionScale:100,captionEmPct:s.cntCaptionEmPct!=null?s.cntCaptionEmPct:130,captionBoostCsv:s.cntCaptionBoostWords};
+    return{audio:s.cntMediaAudio,srt:s.cntMediaSrt,srtCues:cues,bottom:s.cntMediaBottomPct!=null?s.cntMediaBottomPct:4,captionLight:s.counterTextWhite===false,captionAlignLikeTitle:false,captionScale:s.cntCaptionScale!=null?s.cntCaptionScale:100,captionEmPct:s.cntCaptionEmPct!=null?s.cntCaptionEmPct:130,captionBoostCsv:s.cntCaptionBoostWords,captionElasticLand:s.cntCaptionElasticLand===true};
   }
   return null;
 }
@@ -464,10 +896,12 @@ function slideMediaAudTime(idx){
   }
   if(!srt||!String(srt).trim()){cap.innerHTML='';return;}
   const emP=m.captionEmPct!=null?m.captionEmPct:130,boost=m.captionBoostCsv,acc=captionAccentColor(s);
+  const capLight=!!m.captionLight;
   if(!m.audio||!aud){
     cap.classList.add('smed-rich');
+    cap.classList.remove('smed-karaoke');
     var first=cues.length?cues[0].text.replace(/<[^>]+>/g,''):'';
-    cap.innerHTML=formatCaptionRich(first,emP,boost,acc);
+    cap.innerHTML=formatCaptionRich(first,emP,boost,acc,capLight);
     cap.setAttribute('data-smed-hint','preview');
     return;
   }
@@ -475,7 +909,13 @@ function slideMediaAudTime(idx){
   const cue=cues.find(c=>ms>=c.start&&ms<c.end);
   cap.classList.add('smed-rich');
   cap.removeAttribute('data-smed-hint');
-  cap.innerHTML=cue?formatCaptionRich(cue.text.replace(/<[^>]+>/g,''),emP,boost,acc):'';
+  if(cue){
+    cap.classList.add('smed-karaoke');
+    cap.innerHTML=formatCaptionKaraoke(cue.text.replace(/<[^>]+>/g,''),cue.start,cue.end,ms,emP,boost,capLight,acc);
+  }else{
+    cap.classList.remove('smed-karaoke');
+    cap.innerHTML='';
+  }
 }
 function renderSlideMediaStrip(s,w,h,idx,mo){
   mo=mo||{};
@@ -500,10 +940,17 @@ function renderSlideMediaStrip(s,w,h,idx,mo){
     <div aria-hidden="true" style="position:absolute;left:-9999px;width:10px;height:4px;overflow:hidden"><div class="smed-fill" id="smed-fill-${idTag}"></div></div>`;
   }
   const boost=m.captionBoostCsv,acc=captionAccentColor(s);
-  let initial='';
-  if(hasSrt&&!hasAud&&cues.length)initial=formatCaptionRich(cues[0].text.replace(/<[^>]+>/g,''),emP,boost,acc);
+  let initial='',capCls='slide3-cap smed-rich';
+  if(hasSrt&&cues.length){
+    const c0=cues[0],plain=c0.text.replace(/<[^>]+>/g,'');
+    if(!hasAud)initial=formatCaptionRich(plain,emP,boost,acc,m.captionLight);
+    else{
+      capCls+=' smed-karaoke';
+      initial=formatCaptionKaraoke(plain,c0.start,c0.end,c0.start,emP,boost,m.captionLight,acc);
+    }
+  }
   return `<div class="slide-media-strip slide3-media smed-col" style="position:absolute;${posStyle};z-index:8;pointer-events:auto;margin:0 auto;display:flex">
-    <div id="smed-cap-${idTag}" class="slide3-cap smed-rich" data-smed-slide="${slideIdx}" style="min-height:${Math.max(24,Math.round(capMin*0.45))}px;font-family:'Alliance',sans-serif;font-weight:600;font-size:${fs}px;color:${col};text-align:center;line-height:1.35;word-wrap:break-word;max-height:${capMin}px;overflow:auto;width:100%">${initial}</div>
+    <div id="smed-cap-${idTag}" class="${capCls}" data-smed-slide="${slideIdx}" style="min-height:${Math.max(24,Math.round(capMin*0.45))}px;font-family:'Alliance',sans-serif;font-weight:600;font-size:${fs}px;color:${col};text-align:center;line-height:1.35;word-wrap:break-word;max-height:${capMin}px;overflow:auto;width:100%">${initial}</div>
     ${audHtml}
   </div>`;
 }
@@ -880,9 +1327,9 @@ function renderEditor(){
   const sw=['sand','cream','grey','white','dark','black'].map(t=>`<div class="sw sw-${t}${s.theme===t?' on':''}" onclick="upd('theme','${t}')" title="${t}"></div>`).join('');
   let flds='';
   if(s.type==='intro'){
-    flds=togF('showTagline','Tagline',s.showTagline)+(s.showTagline?`<input class="fi" value="${esc(s.tagline)}" oninput="debUpd('tagline',this.value)">`:'')+togF('showTitle','Title',s.showTitle)+(s.showTitle?`<input class="fi" value="${esc(s.title)}" oninput="debUpd('title',this.value)"><div class="fl">Accent word</div><input class="fi" value="${esc(s.hw)}" oninput="debUpd('hw',this.value)">`:'')+togF('showPara','Paragraph',s.showPara)+(s.showPara?`<textarea class="fi" oninput="this.value=limitInputForCurrentSlide('para',this.value);debUpd('para',this.value)">${esc(s.para)}</textarea>`:'')+togF('showSwipe','Swipe button',s.showSwipe)+(s.showSwipe?`<input class="fi" value="${esc(s.swipeText||'Swipe')}" oninput="debUpd('swipeText',this.value)">`:'');
+    flds=togF('showTagline','Tagline',s.showTagline)+(s.showTagline?`<input class="fi" value="${esc(s.tagline)}" oninput="debUpd('tagline',this.value)">`:'')+togF('showTitle','Title',s.showTitle)+(s.showTitle?`<input class="fi" value="${esc(s.title)}" oninput="debUpd('title',this.value)"><div class="fl">Accent word</div><input class="fi" value="${esc(s.hw)}" oninput="debUpd('hw',this.value)">`:'')+togF('showPara','Paragraph',s.showPara)+(s.showPara?paraEditorExtras()+`<textarea id="paraEditorTa" class="fi fi-para" oninput="this.value=limitInputForCurrentSlide('para',this.value);debUpd('para',this.value)">${esc(s.para)}</textarea>`:'')+togF('showSwipe','Swipe button',s.showSwipe)+(s.showSwipe?`<input class="fi" value="${esc(s.swipeText||'Swipe')}" oninput="debUpd('swipeText',this.value)">`:'');
   }else if(s.type==='content'){
-    flds=togF('showCounter','Counter',s.showCounter!==false)+togF('showTitle','Title',s.showTitle)+(s.showTitle?`<input class="fi" value="${esc(s.title)}" oninput="debUpd('title',this.value)"><div class="fl">Accent word</div><input class="fi" value="${esc(s.hw)}" oninput="debUpd('hw',this.value)">`:'')+togF('showPara','Paragraph',s.showPara)+(s.showPara?`<textarea class="fi" oninput="this.value=limitInputForCurrentSlide('para',this.value);debUpd('para',this.value)">${esc(s.para)}</textarea>`:'')+
+    flds=togF('showCounter','Counter',s.showCounter!==false)+togF('showTitle','Title',s.showTitle)+(s.showTitle?`<input class="fi" value="${esc(s.title)}" oninput="debUpd('title',this.value)"><div class="fl">Accent word</div><input class="fi" value="${esc(s.hw)}" oninput="debUpd('hw',this.value)">`:'')+togF('showPara','Paragraph',s.showPara)+(s.showPara?paraEditorExtras()+`<textarea id="paraEditorTa" class="fi fi-para" oninput="this.value=limitInputForCurrentSlide('para',this.value);debUpd('para',this.value)">${esc(s.para)}</textarea>`:'')+
     (s.showCounter!==false&&!s.slide3symbol&&s.slide4photo===undefined&&!s.slide5symbol?`<div class="sec-hd" style="margin-top:10px">Counter + title (e.g. Duafe)</div>
       ${togF('counterTextWhite','White text on dark',s.counterTextWhite!==false)}
       <div class="fl">Horizontal</div>
@@ -919,6 +1366,7 @@ function renderEditor(){
       <input type="range" min="108" max="165" step="1" value="${s.cntCaptionEmPct!=null?s.cntCaptionEmPct:130}" oninput="live('cntCaptionEmPct',parseInt(this.value),'cce','%')">
       <div class="fl">Auto-emphasize words (comma-separated)</div>
       <input class="fi" value="${esc(s.cntCaptionBoostWords||'')}" oninput="debUpd('cntCaptionBoostWords',this.value)" placeholder="e.g. Duafe, Akan">
+      ${togF('cntCaptionElasticLand','Optional: elastic land in .ass export (default is karaoke timing only)',s.cntCaptionElasticLand===true)}
       <button type="button" class="full-btn" style="margin-top:10px;background:var(--dark);color:var(--sand);border:1px solid var(--sand2)" onclick="downloadFfmpegMediaPack()">⬇ Download video pack (ZIP + MAKE-VIDEO.bat)</button>
       <div class="note" style="margin-top:6px">Unzip, install FFmpeg on Windows, double-click <strong>MAKE-VIDEO.bat</strong> → MP4. Pack includes <strong>captions.ass</strong> (same **emphasis** / accent as the editor). The page cannot encode video alone.</div>`:''}
 `:'' )+(s.slide3symbol?`<div class="type-tabs s3-editor-tabs" style="margin-top:10px">
@@ -953,6 +1401,7 @@ function renderEditor(){
       <input type="range" min="108" max="165" step="1" value="${s.slide3CaptionEmPct!=null?s.slide3CaptionEmPct:130}" oninput="live('slide3CaptionEmPct',parseInt(this.value),'s3em','%')">
       <div class="fl">Auto-emphasize words (comma-separated)</div>
       <input class="fi" value="${esc(s.slide3CaptionBoostWords||'')}" oninput="debUpd('slide3CaptionBoostWords',this.value)" placeholder="e.g. Akan, Akans, Nsoromma">
+      ${togF('slide3CaptionElasticLand','Optional: elastic land in .ass export (default is karaoke timing only)',s.slide3CaptionElasticLand===true)}
       <button type="button" class="full-btn" style="margin-top:10px;background:var(--dark);color:var(--sand);border:1px solid var(--sand2)" onclick="downloadFfmpegMediaPack()">⬇ Download video pack (ZIP + MAKE-VIDEO.bat)</button>
       <div class="note" style="margin-top:6px">ZIP: cover, audio, <strong>captions.ass</strong> + .srt, <strong>MAKE-VIDEO.bat</strong>, README. FFmpeg burns styled subs from the .ass file — not generated inside the browser.</div>`:''}
     </div>`:'' )+(s.slide5symbol?`<div class="sec-hd" style="margin-top:10px">Explainer text layout</div>
@@ -966,7 +1415,7 @@ function renderEditor(){
       <input type="range" min="70" max="145" step="1" value="${s.slide5FontBoost!=null?s.slide5FontBoost:100}" oninput="live('slide5FontBoost',parseInt(this.value),'s5fb','%')">`:'') ;
 
   }else{
-    flds=togF('showTagline','Tagline',s.showTagline)+(s.showTagline?`<input class="fi" value="${esc(s.tagline)}" oninput="debUpd('tagline',this.value)">`:'')+(s.showTagline?togF('outroTagPill','Tagline as pill',s.outroTagPill===true):'')+(s.showTagline&&s.outroTagPill?`<div class="fl">Pill CTA (alt.)</div><select class="fi" onchange="upd('outroTagPillAccent',this.value||null)">${[['','Theme default'],['sand','Sand'],['terracotta','Terracotta']].map(([v,l])=>`<option value="${v}"${((v===''&&!s.outroTagPillAccent)||(v&&s.outroTagPillAccent===v))?' selected':''}>${l}</option>`).join('')}</select>`:'')+togF('showTitle','Title',s.showTitle)+(s.showTitle?`<input class="fi" value="${esc(s.title)}" oninput="debUpd('title',this.value)"><div class="fl">Accent word</div><input class="fi" value="${esc(s.hw)}" oninput="debUpd('hw',this.value)">`:'')+togF('showPara','Paragraph',s.showPara)+(s.showPara?`<textarea class="fi" oninput="this.value=limitInputForCurrentSlide('para',this.value);debUpd('para',this.value)">${esc(s.para)}</textarea>`:'')+togF('showCTA','Call to action',s.showCTA)+(s.showCTA?`<input class="fi" value="${esc(s.ctaText)}" oninput="debUpd('ctaText',this.value)">`:'')+togF('showIcons','Social icons',s.showIcons)+
+    flds=togF('showTagline','Tagline',s.showTagline)+(s.showTagline?`<input class="fi" value="${esc(s.tagline)}" oninput="debUpd('tagline',this.value)">`:'')+(s.showTagline?togF('outroTagPill','Tagline as pill',s.outroTagPill===true):'')+(s.showTagline&&s.outroTagPill?`<div class="fl">Pill CTA (alt.)</div><select class="fi" onchange="upd('outroTagPillAccent',this.value||null)">${[['','Theme default'],['sand','Sand'],['terracotta','Terracotta']].map(([v,l])=>`<option value="${v}"${((v===''&&!s.outroTagPillAccent)||(v&&s.outroTagPillAccent===v))?' selected':''}>${l}</option>`).join('')}</select>`:'')+togF('showTitle','Title',s.showTitle)+(s.showTitle?`<input class="fi" value="${esc(s.title)}" oninput="debUpd('title',this.value)"><div class="fl">Accent word</div><input class="fi" value="${esc(s.hw)}" oninput="debUpd('hw',this.value)">`:'')+togF('showPara','Paragraph',s.showPara)+(s.showPara?paraEditorExtras()+`<textarea id="paraEditorTa" class="fi fi-para" oninput="this.value=limitInputForCurrentSlide('para',this.value);debUpd('para',this.value)">${esc(s.para)}</textarea>`:'')+togF('showCTA','Call to action',s.showCTA)+(s.showCTA?`<input class="fi" value="${esc(s.ctaText)}" oninput="debUpd('ctaText',this.value)">`:'')+togF('showIcons','Social icons',s.showIcons)+
     (s.showMascot?`<div class="sec-hd" style="margin-top:10px">Outro layout</div>
       <div class="fl">CTA style</div>
       <select class="fi" onchange="upd('ctaVariant',this.value)">${[['dark','Sand fill'],['white','White fill'],['outline','White outline']].map(([v,l])=>`<option value="${v}"${(s.ctaVariant||'dark')===v?' selected':''}>${l}</option>`).join('')}</select>
@@ -1107,6 +1556,43 @@ function renderEditor(){
     const mq=getSlideMedia(slides[cur]);
     if(mq&&mq.audio)requestAnimationFrame(()=>{try{smedMeta(cur);slideMediaAudTime(cur);}catch(e){}});
   }catch(_){}
+  setTimeout(function(){syncParaEditorPrefs();},0);
+}
+function paraEditorExtras(){
+  return '<div class="fl" style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:4px;"><label style="cursor:pointer;display:flex;align-items:center;gap:5px;font-size:9px;color:var(--muted)"><input type="checkbox" id="paraTallCb" onchange="setParaEditorTall(this.checked)">Tall paragraph box</label><button type="button" class="s-btn" style="font-size:9px;padding:2px 8px" onclick="focusParaEditor()">Focus</button></div>';
+}
+function syncParaEditorPrefs(){
+  var on=typeof sessionStorage!=='undefined'&&sessionStorage.getItem('beizaParaTall')==='1';
+  document.body.classList.toggle('para-editor-tall',!!on);
+  var cb=document.getElementById('paraTallCb');
+  if(cb)cb.checked=on;
+}
+function setParaEditorTall(on){
+  try{sessionStorage.setItem('beizaParaTall',on?'1':'0');}catch(_){}
+  document.body.classList.toggle('para-editor-tall',!!on);
+}
+function focusParaEditor(){
+  var ta=document.getElementById('paraEditorTa');
+  if(!ta)return;
+  ta.focus();
+  try{ta.scrollIntoView({block:'nearest',behavior:'smooth'});}catch(_){ta.scrollIntoView(true);}
+}
+var VARIANT_CSV_MAP_ROWS=[['symbolName','Meta: symbol / export basename'],['carouselNum','Meta: slide number label (e.g. 05)'],['panText','Pan hero: main line'],['panSubText','Pan hero: sub line'],['slide3_title','Question slide: title'],['slide3_hw','Question slide: accent word'],['slide4_title','Photo slide (deck index 3): title'],['slide4_para','Slide index 4: paragraph'],['slide5_title','Explainer slide: long body (field is para in JSON — legacy column name)'],['srt','Slide3 SRT; use \\n in cell for line breaks'],['boostWords','Caption boost words (slide3 + counter)'],['emPct','Caption emphasis %'],['voiceover_script','Meta notes'],['audioFile','Batch encode only — file in audio folder'],['coverImage','Pan cover asset'],['symbolImage','Question slide symbol'],['slide4image','Photo slide image']];
+function openMappingHud(){
+  var tb=document.getElementById('mapTable'),bd=document.getElementById('mapModal');
+  if(!tb||!bd)return;
+  var h='<thead><tr><th>Column</th><th>Maps to</th></tr></thead><tbody>';
+  for(var i=0;i<VARIANT_CSV_MAP_ROWS.length;i++){
+    var row=VARIANT_CSV_MAP_ROWS[i];
+    h+='<tr><td><code>'+escHtml(row[0])+'</code></td><td>'+escHtml(row[1])+'</td></tr>';
+  }
+  h+='</tbody>';
+  tb.innerHTML=h;
+  bd.classList.add('show');
+}
+function closeMappingHud(){
+  var m=document.getElementById('mapModal');
+  if(m)m.classList.remove('show');
 }
 function togG(g,k,lbl){const v=!!globals?.[g]?.[k];return`<div class="tog-row"><span class="tog-lbl">${lbl}</span><div class="tog${v?' on':''}" onclick="toggleGlobal('${g}','${k}')"></div></div>`;}
 function renderPanEd(s,idx,ed){
@@ -1289,8 +1775,15 @@ function delPan(id){const pg=panGroups[id];if(!pg)return;[...pg.slideIds].sort((
 function liveSL(key,val,lid,sfx){const sl=slides[cur];if(!sl.adinkraLocal)sl.adinkraLocal={};sl.adinkraLocal[key]=val;const el=document.getElementById(lid);if(el)el.textContent=val+(sfx||'');renderStripThrottled();}
 function toggleSL(k){const sl=slides[cur];if(k==='adinkraUseGlobal'){sl.adinkraUseGlobal=sl.adinkraUseGlobal===false;if(sl.adinkraUseGlobal===false&&!sl.adinkraLocal)sl.adinkraLocal={scale:100,w:62,x:50,yTop:6,yBottom:82,opacityTop:1,opacityBottom:0.3};}else if(k==='adinkraWhite')sl.adinkraWhite=!sl.adinkraWhite;renderAll();}
 function togSL(k,lbl,v){return`<div class="tog-row"><span class="tog-lbl">${lbl}</span><div class="tog${v?' on':''}" onclick="toggleSL('${k}')"></div></div>`;}
-function getState(){return{deckSchemaVersion:16,slides,panGroups,pgCtr,mascotUrl,fmt,scrollDir,globals};}
+function getState(){
+  const o={deckSchemaVersion:16,slides,panGroups,pgCtr,mascotUrl,fmt,scrollDir,globals};
+  if(deckMeta)o._meta=deckMeta;
+  if(deckVoiceover)o._voiceover=deckVoiceover;
+  return o;
+}
 function setState(d){
+  if('_meta' in d)deckMeta=d._meta||null;
+  if('_voiceover' in d)deckVoiceover=d._voiceover||null;
   slides=d.slides||slides;
   slides=slides.map(s=>{
     if(s.slide4photo!==undefined){
@@ -1361,7 +1854,127 @@ function saveSession(){
 function renderSlots(){document.getElementById('sessSlots').innerHTML=Object.keys(sessions).map(n=>`<div class="slot-pill" onclick="loadNamed('${n}')">${n}<span class="slot-x" onclick="event.stopPropagation();delNamed('${n}')">✕</span></div>`).join('');}
 function loadNamed(n){if(!sessions[n])return;try{setState(JSON.parse(sessions[n]));}catch(e){alert('Error loading.');}}
 function delNamed(n){delete sessions[n];renderSlots();}
-function loadSessionFile(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{try{const d=JSON.parse(ev.target.result);const nm=f.name.replace(/\.json$|^beiza-/g,'');sessions[nm]=ev.target.result;setState(d);document.getElementById('sName').value=nm;renderSlots();}catch(e){alert('Invalid JSON.');}};r.readAsText(f);}
+function loadSessionFile(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{try{const d=JSON.parse(ev.target.result);const nm=f.name.replace(/\.json$|^beiza-/g,'');sessions[nm]=ev.target.result;setState(d);document.getElementById('sName').value=nm;renderSlots();}catch(e){alert('Invalid JSON.');}e.target.value='';};r.readAsText(f);}
+/** Deep clone for delta merge (no shared refs). */
+function deepClone(o){return JSON.parse(JSON.stringify(o));}
+/** Fields allowed in slide deltas — text + caption metadata only (no images / binary). */
+var DELTA_SLIDE_KEYS=['title','hw','para','tagline','ctaText','ctaVariant','qmarkText','authorName','authorSub','theme','slide3Srt','slide3CaptionBoostWords','slide3CaptionEmPct','slide3CaptionScale','slide3CaptionNudgePct','slide3TitleBottomPct','slide3CaptionElasticLand','slide3AdTopPct','slide3QmarkYpct','slide3ShowMedia','cntMediaSrt','cntCaptionBoostWords','cntCaptionEmPct','cntCaptionScale','cntCaptionElasticLand','cntMediaBottomPct','cntAlign','cntStackX','cntStackY','cntNumPct','cntTitPct','cntTitGap','cntWeight','titWeight','showTitle','showPara','showCounter','showTagline','showCTA','outroTagPill','outroTagPillAccent','outroTagPillBg','outroPadTop','outroGap','outroTextNudge','outroForceWhite','outroTagPx','outroParaPx','outroTitlePx','slide5BoxTopPct','slide5BoxHpct','slide5InsetPct','slide5FontBoost','counterTextWhite'];
+var DELTA_SKIP_VALUES=new Set(['bgImage','symbolImage','slide3AudioData','slide4photo','cntMediaAudio','mascotUrl','imageDataUrl']);
+function pickSlideDelta(s){
+  if(!s||typeof s!=='object')return null;
+  const o={};
+  DELTA_SLIDE_KEYS.forEach(function(k){
+    if(s[k]===undefined||s[k]===null)return;
+    if(DELTA_SKIP_VALUES.has(k))return;
+    var v=s[k];
+    if(typeof v==='string'&&(v.indexOf('data:')===0||v.length>4000000))return;
+    o[k]=v;
+  });
+  return Object.keys(o).length?o:null;
+}
+var PAN_DELTA_KEYS=['panText','panSubText','authorName','authorSub','panSubTopPct','panSubRightPct','panSubWidthPct','panHeroFont','panHeroScale','dimAmount','panImgZoom','panImgX','panImgY','panSplit','showAuthor','showMascot','panMascotBottomPct','panMascotRightPct','panMascotWidthPct'];
+function pickPanGroupDelta(pg){
+  if(!pg||typeof pg!=='object')return null;
+  const o={};
+  PAN_DELTA_KEYS.forEach(function(k){
+    if(pg[k]!==undefined&&pg[k]!==null)o[k]=pg[k];
+  });
+  return Object.keys(o).length?o:null;
+}
+/**
+ * Merge a lightweight delta onto a full session. Only fields present in the delta touch the result;
+ * images, audio data URLs, and base64 remain from fullSession.
+ */
+function applyDelta(deltaJson, fullSession){
+  const delta=typeof deltaJson==='string'?JSON.parse(deltaJson):deltaJson;
+  const base=fullSession||getState();
+  const merged=deepClone(base);
+  if(delta._meta!==undefined)merged._meta=delta._meta;
+  if(delta._voiceover!==undefined)merged._voiceover=Object.assign({},merged._voiceover||{},delta._voiceover);
+  if(delta.panGroups){
+    merged.panGroups=merged.panGroups||{};
+    Object.keys(delta.panGroups).forEach(function(id){
+      merged.panGroups[id]=Object.assign({},merged.panGroups[id]||{},delta.panGroups[id]);
+    });
+  }
+  if(delta.panGroup){
+    var ids=Object.keys(merged.panGroups||{});
+    var pid=ids.length?ids[0]:'1';
+    merged.panGroups[pid]=Object.assign({},merged.panGroups[pid]||{},delta.panGroup);
+  }
+  if(delta.slides){
+    merged.slides=merged.slides||[];
+    Object.keys(delta.slides).forEach(function(k){
+      var i=parseInt(k,10);
+      if(!isNaN(i)&&merged.slides[i])Object.assign(merged.slides[i],delta.slides[k]);
+    });
+  }
+  if(delta.captions){
+    var ix=merged.slides.findIndex(function(s){return s.slide3symbol;});
+    if(ix>=0){
+      var t=merged.slides[ix];
+      if(delta.captions.srt!==undefined)t.slide3Srt=delta.captions.srt;
+      if(delta.captions.boostWords!==undefined)t.slide3CaptionBoostWords=delta.captions.boostWords;
+      if(delta.captions.emPct!==undefined)t.slide3CaptionEmPct=delta.captions.emPct;
+    }
+    var ix2=merged.slides.findIndex(function(s){return s.type==='content'&&s.showCounter!==false&&s.slide3symbol!==true&&s.slide4photo===undefined&&s.slide5symbol!==true&&s.cntMediaShow;});
+    if(ix2>=0&&delta.captions.counterSrt!==undefined)merged.slides[ix2].cntMediaSrt=delta.captions.counterSrt;
+  }
+  return merged;
+}
+function buildSessionDeltaObject(){
+  var o={deltaSchemaVersion:1};
+  if(deckMeta)o._meta=deckMeta;
+  if(deckVoiceover)o._voiceover=deckVoiceover;
+  var slideObj={};
+  for(var i=0;i<slides.length;i++){
+    var p=pickSlideDelta(slides[i]);
+    if(p)slideObj[String(i)]=p;
+  }
+  if(Object.keys(slideObj).length)o.slides=slideObj;
+  var pgOut={};
+  Object.keys(panGroups||{}).forEach(function(id){
+    var pd=pickPanGroupDelta(panGroups[id]);
+    if(pd)pgOut[id]=pd;
+  });
+  if(Object.keys(pgOut).length)o.panGroups=pgOut;
+  var capIx=slides.findIndex(function(s){
+    return s.slide3symbol&&(s.slide3ShowMedia||s.slide3Srt||s.slide3CaptionBoostWords!=null||s.slide3CaptionEmPct!=null);
+  });
+  if(capIx>=0){
+    var cs=slides[capIx];
+    if(cs.slide3Srt||cs.slide3CaptionBoostWords!=null||cs.slide3CaptionEmPct!=null){
+      o.captions={};
+      if(cs.slide3Srt)o.captions.srt=cs.slide3Srt;
+      if(cs.slide3CaptionBoostWords!=null)o.captions.boostWords=cs.slide3CaptionBoostWords;
+      if(cs.slide3CaptionEmPct!=null)o.captions.emPct=cs.slide3CaptionEmPct;
+    }
+  }
+  return o;
+}
+function exportDelta(){
+  var name=document.getElementById('sName').value.trim()||'untitled';
+  var json=JSON.stringify(buildSessionDeltaObject(),null,2);
+  var blob=new Blob([json],{type:'application/json;charset=utf-8'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=name+'.delta.json';
+  a.click();
+  setTimeout(function(){URL.revokeObjectURL(a.href);},4e3);
+}
+function loadDeltaFile(e){
+  var f=e.target.files[0];
+  if(!f)return;
+  var r=new FileReader();
+  r.onload=function(ev){
+    try{
+      var merged=applyDelta(ev.target.result,null);
+      setState(merged);
+    }catch(err){alert('Invalid delta JSON: '+(err&&err.message?err.message:String(err)));}
+    e.target.value='';
+  };
+  r.readAsText(f);
+}
 function setExportDpi(n,btn){
   globals.exportDpi=n;
   document.querySelectorAll('[id^=dpi]').forEach(b=>b.classList.remove('on'));
@@ -1538,7 +2151,7 @@ function exportPrepMediaClone(doc,cloned){
     const emP=m.captionEmPct!=null?m.captionEmPct:130,boost=m.captionBoostCsv,acc=captionAccentColor(si);
     const first=cues.length?cues[0].text.replace(/<[^>]+>/g,''):'';
     cap.classList.add('smed-rich');
-    cap.innerHTML=formatCaptionRich(first,emP,boost,acc);
+    cap.innerHTML=formatCaptionRich(first,emP,boost,acc,m.captionLight);
   });
 }
 function exportWaitImages(root){
@@ -1850,33 +2463,97 @@ function msToAssTime(ms){
 function escapeAssText(s){
   return String(s||'').replace(/\\/g,'\\\\').replace(/\{/g,'\\{').replace(/\}/g,'\\}');
 }
-/** Gold #C8905A for **words** (ASS BGR &H005A90C8 in &HAABBGGRR form). */
+/** Gold #C8905A for **words** on dark caption strips; light slides use black emphasis (see captionEmphAssFromM). */
 const ASS_GOLD_EMPH=hexToAssColour('#C8905A');
+const ASS_PRIMARY_LIGHT=hexToAssColour('#111111');
+const ASS_PRIMARY_DARK=hexToAssColour('#FFFFFF');
+/** Inactive words in karaoke ASS (matches .smed-rest in the editor). */
+const ASS_MUTED_LIGHT=hexToAssColour('#999999');
+const ASS_MUTED_DARK=hexToAssColour('#B3B3B3');
 /** Base caption size for FFmpeg pack ASS (matches requested export style). */
 const ASS_BASE_FS=18;
-/**
- * **bold** after applyCaptionBoostWords — emphasis: fs = base × emScalePct/100, gold, then {\r}.
- * Same ratio as formatCaptionRich (em = emScalePct/100).
- */
-function captionCueToAssLine(raw,baseFs,emScalePct,boostCsv){
-  const em=Math.max(1,(emScalePct!=null?emScalePct:130)/100);
-  const emFs=Math.round(baseFs*em);
-  const lines=String(raw||'').replace(/<[^>]+>/g,'').split(/\n/);
-  return lines.map(function(line){
-    let t=applyCaptionBoostWords(line,boostCsv);
-    const parts=t.split(/(\*\*[^*]+\*\*)/g);
-    let out='';
-    parts.forEach(function(p){
-      const mm=p.match(/^\*\*([^*]+)\*\*$/);
-      if(mm) out+='{\\fs'+emFs+'}{\\c'+ASS_GOLD_EMPH+'}'+escapeAssText(mm[1])+'{\\r}';
-      else out+=escapeAssText(p);
-    });
-    return out;
-  }).join('\\N');
+/** Must match PostScript names inside fonts/alliance-no-1-*.ttf (typographic family). */
+const ASS_FONT_FAMILY='Alliance No.1';
+/** CaptionStudio STUDIO_ELASTIC_LAND_STEPS × STUDIO_ELASTIC_FRAME_MS — FFmpeg elastic land duration. */
+const ELASTIC_LAND_MS=14*26;
+function easeOutBack(t){
+  t=Math.max(0,Math.min(1,t));
+  const c1=1.70158,c3=c1+1,tt=t-1;
+  return 1+c3*tt*tt*tt+c1*tt*tt;
+}
+/** ASS \\an2\\move — same easing/drop as CaptionStudio elastic land (make_videos.py). */
+function captionElasticMoveTag(playResX,playResY,marginV,cueStart,wStart,wEnd,landMs){
+  const yFinal=playResY-marginV;
+  const drop=Math.max(28,Math.min(96,Math.floor(playResY/8)));
+  const xC=Math.round(playResX/2);
+  function yAt(elapsedMs){
+    if(landMs<=0)return yFinal;
+    const tt=Math.max(0,Math.min(1,elapsedMs/landMs));
+    const prog=easeOutBack(tt);
+    return Math.round(yFinal-(1-prog)*drop);
+  }
+  const e0=wStart-cueStart,e1=wEnd-cueStart;
+  const y0=yAt(e0),y1=yAt(e1);
+  const dur=Math.max(1,Math.round(wEnd-wStart));
+  return '{\\an2\\move('+xC+','+y0+','+xC+','+y1+',0,'+dur+')}';
+}
+function captionPrimaryAssFromM(m){
+  return m.captionLight?ASS_PRIMARY_LIGHT:ASS_PRIMARY_DARK;
+}
+function captionEmphAssFromM(m){
+  return m.captionLight?captionPrimaryAssFromM(m):ASS_GOLD_EMPH;
+}
+function captionMutedAssFromM(m){
+  return m.captionLight?ASS_MUTED_LIGHT:ASS_MUTED_DARK;
+}
+function innerCaptionToken(part){
+  const mm=String(part||'').match(/^\*\*([^*]+)\*\*$/);
+  return mm?mm[1]:part;
 }
 /**
- * ASS for libass: Alliance (fallback Arial), white, fs 18, bottom centre, opaque box (BorderStyle 3,
- * Outline 3 black, semi-transparent black BackColour). **tokens** → larger fs + gold, {\r} reset.
+ * Word-by-word karaoke ASS (same timing idea as formatCaptionKaraoke): one Dialogue per word slice.
+ * Default: karaoke timing only. Elastic land (ASS \\an2\\move between words) is opt-in via slide3CaptionElasticLand / cntCaptionElasticLand.
+ */
+function captionKaraokeDialoguesForCue(c,baseFs,emScalePct,boostCsv,m,playResX,playResY,marginV){
+  const elasticLand=m.captionElasticLand===true;
+  const em=Math.max(1,(emScalePct!=null?emScalePct:130)/100);
+  const emFs=Math.max(1,Math.round(baseFs*em));
+  const emphAss=captionEmphAssFromM(m);
+  const mutAss=captionMutedAssFromM(m);
+  const cueStart=c.start,cueEnd=c.end,dur=Math.max(1,cueEnd-cueStart);
+  const raw=String(c.text||'').replace(/<[^>]+>/g,'');
+  const lines=raw.split(/\n/).map(function(l){return l.trim();}).filter(Boolean);
+  const nL=Math.max(1,lines.length);
+  const out=[];
+  for(let li=0;li<lines.length;li++){
+    const line=lines[li];
+    const t=applyCaptionBoostWords(line,boostCsv);
+    const parts=t.match(/\*\*[^*]+\*\*|\S+|\s+/g)||[];
+    const wordCount=parts.filter(function(p){return /\S/.test(p);}).length;
+    if(!wordCount)continue;
+    const lineStart=cueStart+dur*(li/nL);
+    const lineEnd=cueStart+dur*((li+1)/nL);
+    const lineDur=Math.max(1,lineEnd-lineStart);
+    for(let wi=0;wi<wordCount;wi++){
+      const wStart=lineStart+lineDur*(wi/wordCount);
+      const wEnd=lineStart+lineDur*((wi+1)/wordCount);
+      let wp=0;
+      const reset=elasticLand?'':'{\\r}';
+      const prefix=elasticLand?captionElasticMoveTag(playResX,playResY,marginV,cueStart,wStart,wEnd,ELASTIC_LAND_MS):'';
+      const text=prefix+parts.map(function(p){
+        if(!/\S/.test(p))return escapeAssText(p);
+        const isAct=(wp===wi);wp++;
+        const inner=innerCaptionToken(p);
+        if(isAct)return '{\\fs'+emFs+'}{\\b1}{\\c'+emphAss+'}'+escapeAssText(inner)+reset;
+        return '{\\fs'+baseFs+'}{\\b0}{\\c'+mutAss+'}'+escapeAssText(inner)+reset;
+      }).join('');
+      out.push('Dialogue: 0,'+msToAssTime(wStart)+','+msToAssTime(wEnd)+',Default,,0,0,0,,'+text);
+    }
+  }
+  return out;
+}
+/**
+ * ASS for libass: word-by-word karaoke (Alliance No.1; active word bold + larger; others muted gray).
  */
 function buildAssForFfmpegPack(s,m){
   const cues=m.srtCues&&m.srtCues.length?m.srtCues:parseSrtToCues(m.srt);
@@ -1885,12 +2562,16 @@ function buildAssForFfmpegPack(s,m){
   const marginV=Math.max(24,Math.round(EH*((m.bottom!=null?m.bottom:6)/100)));
   const emPct=m.captionEmPct!=null?m.captionEmPct:130;
   const boost=m.captionBoostCsv;
-  const di=cues.map(function(c){
-    const txt=captionCueToAssLine(c.text,ASS_BASE_FS,emPct,boost);
-    return 'Dialogue: 0,'+msToAssTime(c.start)+','+msToAssTime(c.end)+',Default,,0,0,0,,'+txt;
-  }).join('\r\n');
-  const sty='Style: Default,Alliance,'+ASS_BASE_FS+',&H00FFFFFF,&H000000FF,&H00000000,&H80000000,-1,0,0,0,100,100,0,0,3,3,0,2,48,48,'+marginV+',1';
-  return ['[Script Info]','Title: Beiza captions','ScriptType: v4.00+','PlayResX: '+EW,'PlayResY: '+EH,'WrapStyle: 0','ScaledBorderAndShadow: yes','','[V4+ Styles]','Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding',sty,'','[Events]','Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text',di].join('\r\n');
+  const capScale=(m.captionScale!=null?m.captionScale:100)/100;
+  const baseFs=Math.max(8,Math.round(ASS_BASE_FS*Math.max(0.5,capScale)));
+  const primaryAss=captionPrimaryAssFromM(m);
+  const borderSeg=m.captionLight?'1,0,0':'3,3,0';
+  const di=[];
+  cues.forEach(function(c){
+    captionKaraokeDialoguesForCue(c,baseFs,emPct,boost,m,EW,EH,marginV).forEach(function(line){di.push(line);});
+  });
+  const sty='Style: Default,'+ASS_FONT_FAMILY+','+baseFs+','+primaryAss+',&H000000FF,&H00000000,&H80000000,-1,0,0,0,100,100,0,0,'+borderSeg+',2,48,48,'+marginV+',1';
+  return ['[Script Info]','Title: Beiza captions','ScriptType: v4.00+','PlayResX: '+EW,'PlayResY: '+EH,'WrapStyle: 0','ScaledBorderAndShadow: yes','','[V4+ Styles]','Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding',sty,'','[Events]','Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text',di.join('\r\n')].join('\r\n');
 }
 function buildFfmpegReadme(name,slideLabel,audioExt,outClean,outSubs){
   return`Beiza Carousel — FFmpeg pack (${name} · ${slideLabel})
@@ -1905,7 +2586,8 @@ ZIP contents:
   cover.jpg       — Full-res still (same as Export slide).
   audio.${audioExt} — Decoded from your session.
   captions.srt    — Plain SRT (optional: soft subs / editing).
-  captions.ass    — Styled subs: white + box, **emphasis** → larger gold text (Alliance; libass).
+  captions.ass    — Styled subs: white + box, **emphasis** → larger gold text (Alliance No.1; libass).
+  fonts/          — Alliance No.1 TTFs when the page could load them (same folder as index.html). If missing, copy from your Carousel/fonts folder next to captions.ass.
   MAKE-VIDEO.bat  — Builds clean + with-subs MP4s (needs FFmpeg on PATH).
   README-ffmpeg.txt — This file.
 
@@ -1922,7 +2604,7 @@ Manual — clean video (no subs):
 ffmpeg -y -loop 1 -i cover.jpg -i audio.${audioExt} -c:v libx264 -tune stillimage -pix_fmt yuv420p -c:a aac -b:a 192k -shortest "${outClean}"
 
 Manual — burned-in ASS (**emphasis** + gold #C8905A, same ratio as formatCaptionRich):
-ffmpeg -y -loop 1 -i cover.jpg -i audio.${audioExt} -vf "ass=captions.ass" -c:v libx264 -pix_fmt yuv420p -c:a aac -b:a 192k -shortest "${outSubs}"
+ffmpeg -y -loop 1 -i cover.jpg -i audio.${audioExt} -vf "ass=captions.ass:fontsdir=fonts" -c:v libx264 -pix_fmt yuv420p -c:a aac -b:a 192k -shortest "${outSubs}"
 
 Optional — soft subs from plain SRT (asterisks visible as text):
 ffmpeg -y -loop 1 -i cover.jpg -i audio.${audioExt} -i captions.srt -c:v libx264 -pix_fmt yuv420p -c:a aac -c:s mov_text -shortest "${name}-${slideLabel}-softsubs.mp4"
@@ -1931,7 +2613,7 @@ Optional — audio file with embedded cover (not a video):
 ffmpeg -y -i audio.${audioExt} -i cover.jpg -map 0:a -map 1 -c:v mjpeg -disposition:v:0 attached_pic -c:a copy "${name}-${slideLabel}-with-art.m4a"
 
 Notes:
-- captions.ass uses Alliance (install locally or edit Style to Arial). **Words** use fs = 18×(caption emphasis%/100) and gold; boost words from the editor are pre-wrapped like applyCaptionBoostWords.
+- captions.ass uses font family “Alliance No.1” (see fonts/*.ttf). FFmpeg needs fontsdir=fonts so libass finds the files. **Words** use fs = 18×(caption emphasis%/100) and gold; boost words from the editor are pre-wrapped like applyCaptionBoostWords.
 `;
 }
 function buildMakeVideoBat(audioExt,outClean,outSubs){
@@ -1954,7 +2636,7 @@ if errorlevel 1 (
 )
 echo.
 echo Building with burned-in ASS: ${outSubs}
-ffmpeg -y -loop 1 -i cover.jpg -i audio.${audioExt} -vf "ass=captions.ass" -c:v libx264 -pix_fmt yuv420p -c:a aac -b:a 192k -shortest "${outSubs}"
+ffmpeg -y -loop 1 -i cover.jpg -i audio.${audioExt} -vf "ass=captions.ass:fontsdir=fonts" -c:v libx264 -pix_fmt yuv420p -c:a aac -b:a 192k -shortest "${outSubs}"
 if errorlevel 1 (
   echo.
   echo  FFmpeg failed ^(ASS^). If subtitles fail, try a folder path without special characters.
@@ -1968,6 +2650,19 @@ echo.
 start .
 pause
 `);
+}
+/** Bundle Carousel/fonts alliance-no-1-*.ttf into the ZIP so FFmpeg libass resolves “Alliance No.1”. Fails on file:// (fetch); copy fonts/ manually or use a local http server. */
+var FFMPEG_PACK_FONT_PATHS=['fonts/alliance-no-1-light.ttf','fonts/alliance-no-1-bold.ttf','fonts/alliance-no-1-black.ttf'];
+async function addAllianceFontsToFfmpegZip(zip){
+  var n=0;
+  for(var i=0;i<FFMPEG_PACK_FONT_PATHS.length;i++){
+    var rel=FFMPEG_PACK_FONT_PATHS[i];
+    try{
+      var r=await fetch(new URL(rel,window.location.href).href);
+      if(r.ok){ zip.file(rel,await r.blob()); n++; }
+    }catch(_){}
+  }
+  return n;
 }
 async function downloadFfmpegMediaPack(){
   if(typeof JSZip==='undefined'){alert('JSZip failed to load. Check network / CDN.');return;}
@@ -1995,6 +2690,7 @@ async function downloadFfmpegMediaPack(){
     zip.file('audio.'+ext,audioBlob);
     zip.file('captions.srt',srt);
     zip.file('captions.ass',buildAssForFfmpegPack(slides[cur],m));
+    await addAllianceFontsToFfmpegZip(zip);
     zip.file('README-ffmpeg.txt',buildFfmpegReadme(nm,lab,ext,outClean,outSubs));
     zip.file('MAKE-VIDEO.bat',buildMakeVideoBat(ext,outClean,outSubs));
     bar.style.width='90%';

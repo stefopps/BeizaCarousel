@@ -1,0 +1,33 @@
+Beiza Carousel — variants.csv column reference (same keys for browser “Load Variants CSV” and python make_videos.py batch).
+
+General
+  - Header names are case-insensitive; spaces in headers are normalized to lowercase keys.
+  - One row = one symbol variant. Empty row ends the table.
+  - Multiline SRT in a cell: use the two characters \n inside the cell (Excel: Alt+Enter still works; export as UTF-8 CSV).
+
+Columns
+  symbolName       Short name (files, variant label, meta).
+  carouselNum      Large index on explainer slide (e.g. 05).
+  panText          Pan hero: main headline on the wide pan slide.
+  panSubText       Pan hero: subtitle.
+  slide3_title     “Question” slide (slide3symbol): title string.
+  slide3_hw        Question slide: accent word (highlights in title).
+  slide4_title     Photo slide (slide4photo; zero-based deck index 3): title line (“Can you spot…”).
+  slide4_para      Same photo slide: paragraph under the image. Alias: photo_para.
+  photo_para       Same as slide4_para.
+  explainer_para   Explainer slide (slide5symbol): body paragraph. Aliases: slide5_para, slide5_body.
+  slide5_title     Legacy: if explainer_para / slide5_para / slide5_body are empty, used as explainer body OR, together with a long slide4_para, may auto-split (short title → counter slide title; long para → explainer body — see below).
+  counter_title    Counter content slide: title only. Alias: counter_name.
+  srt              Full SRT for slide3 captions when “Audio + captions” is on. Turns on slide3ShowMedia when non-empty.
+  boostWords       Comma/semicolon-separated words for caption emphasis (slide3 + counter strip).
+  emPct            Emphasis size percent for captions (e.g. 130). Optional.
+  voiceover_script Free-form script; saved in session _meta.
+  audioFile        Used by Python batch (file under audio/). Not embedded when loading CSV in browser.
+  coverImage       Pan cover: path under covers/ or URL (see resolveVariantAssetRef in index.html).
+  symbolImage      Question-slide symbol image.
+  slide4image      Culture photo for slide4.
+
+Deck indices
+  Photo copy (slide4_para / photo_para) merges into the slide that has slide4photo (usually index 3). Explainer copy merges into the slide with slide5symbol (found by flag). Counter title merges into the content slide that shows the counter (found by flag). For thousands of rows, prefer explicit columns (explainer_para, counter_title, photo_para) so mapping does not depend on the auto-split heuristic.
+
+  Auto-split (when explainer_para / slide5_para / slide5_body are empty): if slide5_title is short (≤40 chars) and slide4_para is much longer (at least 3× the title length and ≥35 chars), slide5_title is treated as the counter title and slide4_para as the explainer body (OpenAI-style rows). Otherwise slide5_title alone fills the explainer slide.
